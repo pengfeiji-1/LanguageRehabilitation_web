@@ -1,0 +1,921 @@
+import { useState, useEffect, useRef } from 'react';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { EvaluationDetailResponse, QuestionDetail, DIMENSION_NAMES, ParsedAphasiaType } from '@/types/wab';
+import { cn } from '@/lib/utils';
+import { adminAPI } from '@/lib/api';
+import { toast } from 'react-hot-toast';
+
+export default function EvaluationDetailPage() {
+  console.log('EvaluationDetailPage component rendered');
+  const { userId } = useParams<{ userId: string }>();
+  const [searchParams] = useSearchParams();
+  console.log('Route params - userId:', userId);
+  const [evaluationData, setEvaluationData] = useState<EvaluationDetailResponse['data'] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showDimensionsModal, setShowDimensionsModal] = useState(false);
+  const [showDialogModal, setShowDialogModal] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<QuestionDetail | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const audioRef = useRef<HTMLAudioElement>(null);
+  
+  // 人工标注状态
+  const [manualAnnotations, setManualAnnotations] = useState<Record<string, {
+    correctness_score?: number;
+    fluency_score?: number;
+    dimensions?: Record<string, string>; // 维度标注：维度key -> 是/否
+    notes?: string;
+  }>>({});
+
+  // 获取查询参数
+  const quizId = searchParams.get('quiz_id');
+
+  // 获取评估详情数据
+  const fetchEvaluationDetail = async () => {
+    if (!userId) {
+      console.error('fetchEvaluationDetail: userId is missing');
+      return;
+    }
+    
+    console.log('fetchEvaluationDetail: starting with userId:', userId, 'quizId:', quizId);
+    setLoading(true);
+    try {
+      const response = await adminAPI.getEvaluationDetail({
+        userId,
+        quizId: quizId || undefined
+      });
+
+      if (response.success) {
+        setEvaluationData(response.data);
+      } else {
+        throw new Error(response.message || '获取评估详情失败');
+      }
+    } catch (error) {
+      console.error('获取评估详情失败:', error);
+      let errorMessage = '获取评估详情失败';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      // 根据错误类型显示不同的提示
+      if (errorMessage.includes('认证') || errorMessage.includes('登录') || errorMessage.includes('token') || errorMessage.includes('令牌')) {
+        toast.error('认证失败，请重新登录');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else if (errorMessage.includes('无效的数据格式') || errorMessage.includes('JSON')) {
+        toast.error('服务器数据格式错误，请联系管理员或稍后重试');
+      } else if (errorMessage.includes('网络连接')) {
+        toast.error('网络连接失败，请检查网络后重试');
+      } else if (errorMessage.includes('服务器错误')) {
+        toast.error('服务器暂时无法处理请求，请稍后重试');
+      } else if (errorMessage.includes('quiz_id为必需参数')) {
+        toast.error('没有评估详情信息');
+        setTimeout(() => {
+          window.location.href = '/wab/reports';
+        }, 2000);
+        return;
+      } else {
+        toast.error(errorMessage);
+      }
+      
+      setEvaluationData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    console.log('EvaluationDetail useEffect - userId:', userId, 'quizId:', quizId);
+    if (userId) {
+      fetchEvaluationDetail();
+    } else {
+      console.error('userId is missing');
+      setLoading(false);
+    }
+  }, [userId, quizId]);
+
+  // 解析失语症维度数据
+  const parseAphasiaType = (aphasiaTypeJson: string): ParsedAphasiaType | null => {
+    try {
+      return JSON.parse(aphasiaTypeJson);
+    } catch (error) {
+      console.error('解析失语症维度数据失败:', error);
+      return null;
+    }
+  };
+
+  // 获取所有题目列表
+  const getAllQuestions = (): QuestionDetail[] => {
+    if (!evaluationData?.assessment_info) return [];
+    
+    const allQuestions: QuestionDetail[] = [];
+    evaluationData.assessment_info.forEach(assessmentType => {
+      allQuestions.push(...assessmentType.questions);
+    });
+    
+    // 按question_id排序，确保q_001在前面
+    return allQuestions.sort((a, b) => {
+      // 提取question_id中的数字部分进行比较
+      const getQuestionNumber = (questionId: string) => {
+        const match = questionId.match(/q_(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      };
+      
+      return getQuestionNumber(a.question_id) - getQuestionNumber(b.question_id);
+    });
+  };
+
+  // 修复音频URL - 直接使用后端地址
+  const getFullAudioUrl = (audioUrl: string): string => {
+    if (!audioUrl) return '';
+    if (audioUrl.startsWith('http')) return audioUrl;
+    // 直接使用后端地址，后端已配置CORS
+    return `http://120.48.175.29:8001${audioUrl}`;
+  };
+
+  // 处理查看维度详情
+  const handleViewDimensions = (question: QuestionDetail) => {
+    setSelectedQuestion(question);
+    setShowDimensionsModal(true);
+  };
+
+  // 处理查看对话结果
+  const handleViewDialog = (question: QuestionDetail) => {
+    setSelectedQuestion(question);
+    setShowDialogModal(true);
+  };
+
+  // 获取选中题目的维度分组
+  const getDimensionGroups = () => {
+    if (!selectedQuestion?.aphasia_types) return [];
+
+    const allDimensions = Object.entries(selectedQuestion.aphasia_types);
+    
+    // 定义分组配置
+    const groupConfigs = [
+      {
+        key: 'dialogue_smooth',
+        name: '对话顺畅',
+        color: 'bg-green-500',
+        dimensionKeys: ['no_silence', 'no_stereotyped_speech', 'no_perseverative_speech', 'no_echolalia']
+      },
+      {
+        key: 'expression_rich',
+        name: '表达丰富',
+        color: 'bg-blue-500',
+        dimensionKeys: ['normal_speech_rate', 'lexical_richness']
+      },
+      {
+        key: 'grammar_correct',
+        name: '语法正确',
+        color: 'bg-purple-500',
+        dimensionKeys: ['no_telegraphic_speech', 'no_empty_speech', 'correct_word_order', 'correct_collocation']
+      },
+      {
+        key: 'answer_correct',
+        name: '答案正确',
+        color: 'bg-orange-500',
+        dimensionKeys: ['topic_relevance', 'correct_answer']
+      },
+      {
+        key: 'expression_smooth',
+        name: '表达顺畅',
+        color: 'bg-red-500',
+        dimensionKeys: ['no_word_finding_difficulty', 'no_self_correction'] // 'no_naming_impairment' 暂时注释不显示
+      }
+    ];
+
+    return groupConfigs.map(config => {
+      const groupDimensions = allDimensions.filter(([key]) => 
+        config.dimensionKeys.includes(key)
+      );
+      
+      const realData = groupDimensions.map(([key, value]) => {
+        const parsedData = parseAphasiaType(value);
+        const dimensionName = DIMENSION_NAMES[key] || key;
+        
+        if (parsedData) {
+          return {
+            key: key,
+            name: dimensionName,
+            reason: parsedData.reason || '暂无分析原因',
+            result: parsedData.result || '否',
+            qwen: parsedData.qwen_used || false
+          };
+        } else {
+          // 如果解析失败，显示原始数据
+          return {
+            key: key,
+            name: dimensionName,
+            reason: '数据格式异常',
+            result: value === 'true' || value === '1' ? '是' : '否',
+            qwen: false
+          };
+        }
+      });
+
+      return {
+        key: config.key,
+        name: config.name,
+        count: realData.length,
+        color: config.color,
+        dimensions: groupDimensions,
+        realData: realData
+      };
+    }).filter(group => group.realData.length > 0); // 只显示有数据的分组
+  };
+
+
+  // 获取所有题目的表格数据
+  const getQuestionTableData = () => {
+    const allQuestions = getAllQuestions();
+    
+    return allQuestions.map((question, index) => ({
+      id: index + 1,
+      sequence: index + 1,
+      type: question.question_type === 'SPONTANEOUS_SPEECH_QA' ? '自发性言语' : (question.question_type || "自发言语"),
+      content: question.question_content || '问题内容未知',
+      referenceAnswer: question.correct_answer || '参考答案未知',
+      duration: question.answer_time ? `${question.answer_time}秒` : '未知',
+      correctnessScore: question.scores.correctness_score.toString(),
+      fluencyScore: question.scores.fluency_score.toString(),
+      fluencyScoreDisplay: question.scores.fluency_score > 1 
+        ? Math.round(question.scores.fluency_score * 10) 
+        : Math.round(question.scores.fluency_score * 100),
+      questionDetail: question
+    }));
+  };
+
+  // 音频播放控制
+  const toggleAudio = async (question?: QuestionDetail) => {
+    try {
+      // 如果传入了新的问题
+      if (question) {
+        // 检查音频URL是否存在
+        if (!question.speaking_audio_url) {
+          alert('该题目没有音频文件');
+          return;
+        }
+        
+        // 如果点击的是同一个题目的音频，则切换播放/暂停
+        if (isPlaying && selectedQuestion?.question_id === question.question_id && audioRef.current) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+          return;
+        }
+        
+        // 如果当前有其他音频在播放，先停止
+        if (isPlaying && audioRef.current) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+        }
+        
+        console.log('设置音频源:', question.question_id, getFullAudioUrl(question.speaking_audio_url));
+        setSelectedQuestion(question);
+        
+        // 等待React重新渲染音频元素
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // 再次检查音频元素是否存在
+        if (!audioRef.current) {
+          console.error('音频元素仍未找到，等待更长时间...');
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+      } else {
+        // 没有传入问题，只是切换当前音频的播放状态
+        if (isPlaying && audioRef.current) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+          return;
+        }
+      }
+
+      if (!audioRef.current) {
+        console.error('音频元素未找到，无法播放');
+        alert('音频播放器初始化失败，请重试');
+        return;
+      }
+
+      console.log('尝试播放音频:', audioRef.current.src);
+      
+      // 检查音频是否已加载
+      if (audioRef.current.readyState < 2) {
+        console.log('音频未加载完成，等待加载...');
+        await new Promise((resolve, reject) => {
+          const audio = audioRef.current!;
+          const timeout = setTimeout(() => {
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.removeEventListener('error', onError);
+            reject(new Error('音频文件不存在或加载超时，请检查网络连接'));
+          }, 5000);
+          
+          const onCanPlay = () => {
+            clearTimeout(timeout);
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.removeEventListener('error', onError);
+            resolve(void 0);
+          };
+          const onError = (_e: Event) => {
+            clearTimeout(timeout);
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.removeEventListener('error', onError);
+            reject(new Error('音频文件不存在或格式不支持'));
+          };
+          audio.addEventListener('canplay', onCanPlay);
+          audio.addEventListener('error', onError);
+          audio.load(); // 重新加载音频
+        });
+      }
+      
+      await audioRef.current.play();
+      setIsPlaying(true);
+      console.log('音频播放成功');
+      
+    } catch (error) {
+      console.error('音频播放失败:', error);
+      setIsPlaying(false);
+      if (error instanceof Error) {
+        alert(`音频播放失败: ${error.message}`);
+      } else {
+        alert('音频播放失败: 音频文件可能不存在或网络连接有问题');
+      }
+    }
+  };
+
+  // 切换分组展开/收起
+  const toggleGroup = (groupKey: string) => {
+    setCollapsedGroups(prev => ({
+      ...prev,
+      [groupKey]: !prev[groupKey]
+    }));
+  };
+
+  // 更新人工标注分数
+  const updateManualScore = (questionId: string, type: 'correctness_score' | 'fluency_score', value: number) => {
+    setManualAnnotations(prev => ({
+      ...prev,
+      [questionId]: {
+        ...prev[questionId],
+        [type]: value
+      }
+    }));
+  };
+
+  // 更新人工标注维度
+  const updateManualDimension = (questionId: string, dimensionKey: string, value: string) => {
+    setManualAnnotations(prev => ({
+      ...prev,
+      [questionId]: {
+        ...prev[questionId],
+        dimensions: {
+          ...prev[questionId]?.dimensions,
+          [dimensionKey]: value
+        }
+      }
+    }));
+  };
+
+  // 保存人工标注（可以后续连接到API）
+  const saveManualAnnotations = async () => {
+    try {
+      console.log('保存人工标注:', manualAnnotations);
+      // TODO: 调用API保存标注数据
+      // await adminAPI.saveManualAnnotations(userId, quizId, manualAnnotations);
+      alert('标注已保存（当前为演示模式）');
+    } catch (error) {
+      console.error('保存标注失败:', error);
+      alert('保存失败，请重试');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <i className="fa-solid fa-spinner fa-spin text-3xl text-blue-500 mb-4"></i>
+          <p className="text-gray-600 text-lg">加载评估详情中...</p>
+          <p className="text-sm text-gray-500 mt-2">userId: {userId}, quizId: {quizId}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!evaluationData) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center py-12 bg-white rounded-2xl shadow-md px-8 mx-4 max-w-md">
+          <i className="fa-solid fa-exclamation-triangle text-6xl text-yellow-500 mb-6"></i>
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">数据加载失败</h3>
+          <p className="text-gray-500 mb-6">
+            评估详情暂时无法获取，可能是以下原因：
+          </p>
+          <ul className="text-left text-gray-600 mb-6 space-y-2">
+            <li>• 评估记录不存在</li>
+            <li>• 服务器暂时无法访问</li>
+            <li>• 网络连接问题</li>
+          </ul>
+          <div className="flex flex-col space-y-3">
+            <button
+              onClick={fetchEvaluationDetail}
+              className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <i className="fa-solid fa-refresh mr-2"></i>
+              重试加载
+            </button>
+            <Link
+              to="/wab/reports"
+              className="inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+            >
+              <i className="fa-solid fa-arrow-left mr-2"></i>
+              返回列表
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 计算总体分数
+  const calculateOverallScores = () => {
+    const allQuestions = getAllQuestions();
+    if (allQuestions.length === 0) {
+      return { correctnessPercent: 0, fluencyAverage: 0 };
+    }
+
+    // 计算正确率：correctness_score = 1 表示正确，其他表示错误
+    const correctCount = allQuestions.filter(q => q.scores.correctness_score === 1).length;
+    const correctnessPercent = Math.round((correctCount / allQuestions.length) * 100);
+
+    // 计算流畅度平均值（保留一位小数）
+    const totalFluencyScore = allQuestions.reduce((sum, q) => sum + q.scores.fluency_score, 0);
+    const fluencyAverage = Math.round((totalFluencyScore / allQuestions.length) * 10) / 10;
+
+    return { correctnessPercent, fluencyAverage };
+  };
+  
+  const { correctnessPercent, fluencyAverage } = calculateOverallScores();
+  const dimensionGroups = getDimensionGroups();
+  const questionTableData = getQuestionTableData();
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-full space-y-5">
+        
+        {/* 顶部返回按钮和保存按钮 */}
+        <div className="flex items-center justify-between mb-4 px-5">
+          <Link
+            to="/wab/reports"
+            className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <i className="fa-solid fa-arrow-left text-xl mr-2"></i>
+            <span className="font-medium">返回列表</span>
+          </Link>
+          <button
+            onClick={saveManualAnnotations}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <i className="fa-solid fa-save mr-2"></i>
+            <span className="font-medium">保存标注</span>
+          </button>
+        </div>
+
+        {/* 用户信息卡片 */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm mx-5">
+          <div className="grid grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-gray-500 text-sm mb-1">评估人</div>
+              <div className="text-gray-900 font-medium">
+                {evaluationData.basic_info?.username || '未知用户'}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-500 text-sm mb-1">年龄</div>
+              <div className="text-gray-900 font-medium">
+                {evaluationData.basic_info?.age || '-'}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-500 text-sm mb-1">失语类型</div>
+              <div className="text-gray-900 font-medium">
+                {evaluationData.basic_info?.aphasia_type || '-'}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-500 text-sm mb-1">总时长</div>
+              <div className="text-gray-900 font-medium">
+                {evaluationData.basic_info?.total_time ? `${evaluationData.basic_info.total_time}秒` : '-'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        {/* 问题表格 - 可折叠 */}
+        <div className="bg-white shadow-sm overflow-hidden">
+          <div 
+            className="px-6 py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">评估题目详情</h3>
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-gray-600">
+                  <span className="mr-4">正确率: <span className="font-medium text-blue-600">{correctnessPercent}%</span></span>
+                  <span>流畅度: <span className="font-medium text-green-600">{fluencyAverage}</span></span>
+                </div>
+                <i className={cn(
+                  "fa-solid text-sm transition-transform",
+                  isCollapsed ? "fa-chevron-down" : "fa-chevron-up"
+                )}></i>
+              </div>
+            </div>
+          </div>
+          
+          {!isCollapsed && (
+            <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-center font-medium text-sm w-16">序号</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">题型</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[200px]">题目内容</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[150px]">参考答案</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">对话结果</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm w-16">音频</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm w-20">用时</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">流畅度</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[100px]">正确性得分</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[100px]">流畅度得分</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">人工正确性</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">人工流畅度</th>
+                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[100px]">重评估</th>
+                </tr>
+              </thead>
+              <tbody>
+                {questionTableData.map((question) => (
+                  <tr key={question.id} className="border-t border-gray-100 hover:bg-gray-50">
+                    <td className="px-6 py-5 text-center text-sm text-gray-600">
+                      {question.sequence}
+                    </td>
+                    <td className="px-6 py-5 text-center text-sm text-gray-600">
+                      {question.type}
+                    </td>
+                    <td className="px-6 py-5 text-sm text-gray-900">
+                      <div className="max-w-[250px] truncate" title={question.content}>
+                        {question.content}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-sm text-gray-900">
+                      <div className="max-w-[200px] truncate" title={question.referenceAnswer}>
+                        {question.referenceAnswer}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <button 
+                        onClick={() => handleViewDialog(question.questionDetail)}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors underline"
+                      >
+                        查看详情
+                      </button>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      {question.questionDetail.speaking_audio_url ? (
+                        <button 
+                          onClick={() => toggleAudio(question.questionDetail)}
+                          className="inline-flex items-center justify-center w-8 h-8 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-full transition-colors"
+                          title={`${isPlaying && selectedQuestion?.question_id === question.questionDetail.question_id ? '暂停' : '播放'}音频`}
+                        >
+                          <i className={`fa-solid ${isPlaying && selectedQuestion?.question_id === question.questionDetail.question_id ? 'fa-pause' : 'fa-play'} text-sm`}></i>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-5 text-center text-sm text-gray-600">
+                      {question.duration}
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <button 
+                        onClick={() => handleViewDimensions(question.questionDetail)}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors underline"
+                      >
+                        查看详情
+                      </button>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+                        {parseFloat(question.correctnessScore)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full">
+                        {parseFloat(question.fluencyScore)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <input
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        className="w-24 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                        value={manualAnnotations[question.questionDetail.question_id]?.correctness_score || ''}
+                        onChange={(e) => updateManualScore(question.questionDetail.question_id, 'correctness_score', parseFloat(e.target.value) || 0)}
+                        placeholder="0-1"
+                      />
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        step="0.1"
+                        className="w-24 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                        value={manualAnnotations[question.questionDetail.question_id]?.fluency_score || ''}
+                        onChange={(e) => updateManualScore(question.questionDetail.question_id, 'fluency_score', parseFloat(e.target.value) || 0)}
+                        placeholder="0-10"
+                      />
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <button 
+                        className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors underline"
+                      >
+                        重评估
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 对话结果弹窗 */}
+      {showDialogModal && selectedQuestion && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900">对话结果</h3>
+                <button
+                  onClick={() => setShowDialogModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <i className="fa-solid fa-times text-xl"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {/* 问题内容 */}
+              <div className="bg-blue-50 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-blue-700 font-medium">问题内容</span>
+                  <button 
+                    onClick={() => toggleAudio()}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <i className={`fa-solid ${isPlaying ? 'fa-pause' : 'fa-play'} text-sm`}></i>
+                  </button>
+                </div>
+                <p className="text-gray-800">{selectedQuestion.question_content}</p>
+              </div>
+
+              {/* 多轮对话显示 */}
+              {selectedQuestion.user_ai_interaction && selectedQuestion.user_ai_interaction.rounds && (
+                <div className="space-y-3">
+                  <h4 className="text-lg font-medium text-gray-900">对话过程</h4>
+                  {selectedQuestion.user_ai_interaction.rounds.map((round, index) => (
+                    <div key={index} className="border border-gray-200 rounded-xl p-4">
+                      <div className="flex items-center mb-2">
+                        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold mr-2">
+                          第{round.round}轮
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {new Date(round.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      
+                      {round.prompt && (
+                        <div className="bg-blue-50 rounded-lg p-3 mb-2">
+                          <div className="text-blue-700 font-medium text-sm mb-1">AI提问</div>
+                          <p className="text-gray-800">{round.prompt}</p>
+                        </div>
+                      )}
+                      
+                      {round.user_answer && (
+                        <div className="bg-green-50 rounded-lg p-3 mb-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-green-700 font-medium text-sm">用户回答</span>
+                            <span className="text-xs text-gray-500">
+                              耗时: {round.user_answer.user_answer_time_spent}秒
+                            </span>
+                          </div>
+                          <p className="text-gray-800">{round.user_answer.text}</p>
+                        </div>
+                      )}
+                      
+                      {round.ai_response && (
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <div className="text-gray-700 font-medium text-sm mb-1">AI反馈</div>
+                          <p className="text-gray-800">{round.ai_response}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 参考答案 */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-700 font-medium">参考答案</span>
+                </div>
+                <p className="text-gray-800">{selectedQuestion.correct_answer}</p>
+              </div>
+
+              {/* 评估分数和时间信息 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <div className="text-gray-500 text-sm mb-1">正确性</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {Math.round(selectedQuestion.scores.correctness_score * 100)}%
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <div className="text-gray-500 text-sm mb-1">流畅度</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {Math.round(selectedQuestion.scores.fluency_score * 100)}%
+                  </div>
+                </div>
+              </div>
+
+              {/* 时间信息 */}
+              <div className="bg-blue-50 rounded-xl p-4">
+                <h4 className="text-blue-700 font-medium mb-2">时间统计</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">答题时间:</span>
+                    <span className="ml-2 font-medium">{selectedQuestion.answer_time}秒</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">回答耗时:</span>
+                    <span className="ml-2 font-medium">{selectedQuestion.user_answer_time_spent}秒</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">提交时间:</span>
+                    <span className="ml-2 font-medium">{new Date(selectedQuestion.submit_time * 1000).toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">创建时间:</span>
+                    <span className="ml-2 font-medium">{new Date(selectedQuestion.created_time).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 维度详情弹窗 */}
+      {showDimensionsModal && selectedQuestion && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900">评估维度详细分析</h3>
+                <button
+                  onClick={() => setShowDimensionsModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <i className="fa-solid fa-times text-xl"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {dimensionGroups.map((group, groupIndex) => (
+                <div key={group.key} className="bg-gray-50 rounded-xl overflow-hidden shadow-sm">
+                  <div 
+                    className={cn(
+                      "text-white p-3 flex items-center justify-between cursor-pointer",
+                      group.color
+                    )}
+                    onClick={() => toggleGroup(group.key)}
+                  >
+                    <span className="font-medium">{group.name} ({group.count}项)</span>
+                    <i className={cn(
+                      "fa-solid text-sm transition-transform",
+                      collapsedGroups[group.key] ? "fa-chevron-down" : "fa-chevron-up"
+                    )}></i>
+                  </div>
+                  {!collapsedGroups[group.key] && (
+                    <div className="p-3 space-y-2">
+                      {group.realData.map((item, itemIndex) => (
+                        <div key={itemIndex} className="bg-white rounded-lg p-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start space-x-3 flex-1">
+                              <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                                {(() => {
+                                  // 计算连续编号
+                                  let totalIndex = 1;
+                                  for (let i = 0; i < groupIndex; i++) {
+                                    totalIndex += dimensionGroups[i].realData.length;
+                                  }
+                                  return totalIndex + itemIndex;
+                                })()}
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900 mb-1">{item.name}</div>
+                                <div className="text-gray-500 text-sm">{item.reason}</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 ml-3">
+                              <div className="flex flex-col items-center space-y-1">
+                                <span className="text-xs text-gray-500">系统</span>
+                                <span className={cn(
+                                  "px-2 py-1 rounded text-xs font-bold text-white",
+                                  item.result === '是' ? 'bg-green-500' : 'bg-red-500'
+                                )}>
+                                  {item.result}
+                                </span>
+                              </div>
+                              <div className="flex flex-col items-center space-y-1">
+                                <span className="text-xs text-gray-500">人工</span>
+                                <select
+                                  className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  value={manualAnnotations[selectedQuestion?.question_id || '']?.dimensions?.[item.key || ''] || ''}
+                                  onChange={(e) => selectedQuestion && item.key && updateManualDimension(selectedQuestion.question_id, item.key, e.target.value)}
+                                >
+                                  <option value="">未标注</option>
+                                  <option value="是">是</option>
+                                  <option value="否">否</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 隐藏的音频元素 */}
+      {selectedQuestion?.speaking_audio_url && (
+        <audio 
+          key={selectedQuestion.question_id}
+          ref={audioRef}
+          preload="metadata"
+          onLoadedData={() => {
+            console.log('音频加载完成:', getFullAudioUrl(selectedQuestion.speaking_audio_url));
+            console.log('音频就绪状态:', audioRef.current?.readyState);
+          }}
+          onLoadStart={() => console.log('开始加载音频')}
+          onCanPlay={() => console.log('音频可以播放')}
+          onError={(e) => {
+            const audioUrl = getFullAudioUrl(selectedQuestion.speaking_audio_url);
+            console.error('音频加载失败:', audioUrl);
+            console.error('错误事件:', e);
+            setIsPlaying(false);
+            // 显示更详细的错误信息
+            if (audioRef.current) {
+              console.error('音频错误详情:', {
+                url: audioUrl,
+                networkState: audioRef.current.networkState,
+                readyState: audioRef.current.readyState,
+                error: audioRef.current.error?.code,
+                errorMessage: audioRef.current.error?.message
+              });
+            }
+          }}
+          onEnded={() => {
+            console.log('音频播放结束');
+            setIsPlaying(false);
+          }}
+          onPause={() => {
+            console.log('音频暂停');
+            setIsPlaying(false);
+          }}
+          onPlay={() => {
+            console.log('音频开始播放');
+            setIsPlaying(true);
+          }}
+        >
+          <source src={getFullAudioUrl(selectedQuestion.speaking_audio_url)} type="audio/wav" />
+          <source src={getFullAudioUrl(selectedQuestion.speaking_audio_url)} type="audio/mpeg" />
+          您的浏览器不支持音频播放。
+        </audio>
+      )}
+    </div>
+  );
+}
