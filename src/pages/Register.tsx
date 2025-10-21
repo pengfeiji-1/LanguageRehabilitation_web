@@ -181,32 +181,32 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-sm sm:max-w-md w-full space-y-6 sm:space-y-8">
         {/* 头部 */}
         <div>
           <div className="flex justify-center">
             <img
-              className="h-20 w-auto"
+              className="h-16 sm:h-20 w-auto"
               src="/logo.png"
               alt="智能语翼"
               style={{ filter: 'hue-rotate(180deg) saturate(1.5) brightness(0.9)', mixBlendMode: 'normal' }}
             />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          <h2 className="mt-4 sm:mt-6 text-center text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
             注册管理员账户
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-xs sm:text-sm text-gray-600 px-2">
             注册后需要等待超级管理员审批才能使用完整功能
           </p>
-          <p className="mt-1 text-center text-xs text-gray-500">
+          <p className="mt-1 text-center text-xs text-gray-500 px-2">
             如遇到权限问题，请联系系统管理员或使用管理员账户登录后创建新用户
           </p>
         </div>
 
         {/* 注册表单 */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+        <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-3 sm:space-y-4">
             {/* 用户名 */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">
@@ -219,7 +219,7 @@ export default function Register() {
                 required
                 value={formData.username}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                 placeholder="请输入登录用户名"
               />
             </div>
@@ -236,7 +236,7 @@ export default function Register() {
                 required
                 value={formData.real_name}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                 placeholder="请输入真实姓名"
               />
             </div>
@@ -252,16 +252,16 @@ export default function Register() {
                 type="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                 placeholder="请输入邮箱地址"
               />
             </div>
 
             {/* 角色说明 */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3">
               <div className="flex items-start">
-                <i className="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
-                <div className="text-sm text-blue-700">
+                <i className="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-2 text-sm"></i>
+                <div className="text-xs sm:text-sm text-blue-700 leading-relaxed">
                   <strong>默认角色：</strong>注册成功后将获得查看员权限，需要超级管理员审批后升级为管理员。
                 </div>
               </div>
@@ -280,7 +280,7 @@ export default function Register() {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full px-3 py-2 sm:py-3 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                   placeholder="请输入密码"
                 />
                 <button
@@ -322,14 +322,14 @@ export default function Register() {
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 确认密码 <span className="text-red-500">*</span>
               </label>
-              <input
+                <input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
                 required
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`mt-1 block w-full px-3 py-2 sm:py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${
                   formData.confirmPassword && formData.password !== formData.confirmPassword 
                     ? 'border-red-300' 
                     : 'border-gray-300'
@@ -343,21 +343,21 @@ export default function Register() {
           </div>
 
           {/* 提交按钮 */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <button
               type="submit"
               disabled={loading || !passwordStrength.isValid}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="group relative w-full flex justify-center py-3 sm:py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <>
                   <i className="fa-solid fa-spinner fa-spin mr-2"></i>
-                  注册中...
+                  <span className="text-sm sm:text-base">注册中...</span>
                 </>
               ) : (
                 <>
                   <i className="fa-solid fa-user-plus mr-2"></i>
-                  注册管理员账户
+                  <span className="text-sm sm:text-base">注册管理员账户</span>
                 </>
               )}
             </button>
@@ -365,10 +365,10 @@ export default function Register() {
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="w-full flex justify-center py-3 sm:py-2 px-4 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
               <i className="fa-solid fa-arrow-left mr-2"></i>
-              返回登录界面
+              <span className="text-sm sm:text-base">返回登录界面</span>
             </button>
           </div>
         </form>

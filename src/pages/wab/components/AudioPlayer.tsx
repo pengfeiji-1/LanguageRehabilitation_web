@@ -15,12 +15,14 @@ export default function AudioPlayer({ evaluationId, audioUrl, className, onError
   const [currentTime, setCurrentTime] = useState(0);
   const [loading, setLoading] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
 
   const loadAudio = async (evalId: number) => {
     try {
       setLoading(true);
+      setError(null); // 清除之前的错误
       
       // 步骤1：获取音频令牌 (按照文档API指南)
       const audioData = await getAudioToken(evalId);
@@ -46,8 +48,10 @@ export default function AudioPlayer({ evaluationId, audioUrl, className, onError
       
       setBlobUrl(newBlobUrl);
     } catch (error) {
-      // 简单检测：包含音频+没有/404 = 静默处理
       const errorStr = String(error);
+      const errorMessage = error instanceof Error ? error.message : '音频加载失败';
+      
+      // 简单检测：包含音频+没有/404 = 静默处理
       if (errorStr.includes('音频') && (
           errorStr.includes('没有') || 
           errorStr.includes('不存在') || 
@@ -55,11 +59,12 @@ export default function AudioPlayer({ evaluationId, audioUrl, className, onError
           errorStr.includes('No audio')
         )) {
         console.log('🔇 没有音频，静默处理');
+        setError('该评估暂无音频资源');
         onError?.('该评估暂无音频资源');
       } else {
-        const errorMessage = error instanceof Error ? error.message : '音频加载失败';
-        onError?.(errorMessage);
         console.error('音频加载失败:', error);
+        setError(errorMessage);
+        onError?.(errorMessage);
       }
     } finally {
       setLoading(false);
@@ -143,6 +148,21 @@ export default function AudioPlayer({ evaluationId, audioUrl, className, onError
       <div className={cn("flex items-center text-blue-600", className)}>
         <i className="fa-solid fa-spinner fa-spin mr-1"></i>
         <span className="text-sm">加载中...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={cn("flex items-center text-red-600", className)} title={error}>
+        <i className="fa-solid fa-exclamation-triangle mr-1"></i>
+        <span className="text-sm">
+          {error.includes('502') || error.includes('服务器') 
+            ? '服务异常' 
+            : error.includes('No audio') || error.includes('没有音频')
+            ? '无音频'
+            : '加载失败'}
+        </span>
       </div>
     );
   }

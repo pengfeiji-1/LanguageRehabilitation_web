@@ -3,7 +3,10 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { EvaluationDetailResponse, QuestionDetail, DIMENSION_NAMES, ParsedAphasiaType } from '@/types/wab';
 import { cn } from '@/lib/utils';
 import { adminAPI } from '@/lib/api';
-import { showError } from '@/lib/toast';
+import { showError, showSuccess } from '@/lib/toast';
+import AudioPlayer from './components/AudioPlayer';
+import { useReevaluation } from '@/lib/reevaluation';
+import ReevaluationProgress from '@/components/ReevaluationProgress';
 
 export default function EvaluationDetailPage() {
   console.log('EvaluationDetailPage component rendered');
@@ -12,13 +15,17 @@ export default function EvaluationDetailPage() {
   console.log('Route params - userId:', userId);
   const [evaluationData, setEvaluationData] = useState<EvaluationDetailResponse['data'] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [showDimensionsModal, setShowDimensionsModal] = useState(false);
   const [showDialogModal, setShowDialogModal] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionDetail | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
-  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // 重评估相关状态
+  const [showProgress, setShowProgress] = useState(false);
+  const [reevaluatingQuestions, setReevaluatingQuestions] = useState<Set<string>>(new Set());
+  const progressRef = useRef<any>(null);
+  const { reevaluateQuestion } = useReevaluation();
   
 
   // 获取查询参数
@@ -121,13 +128,6 @@ export default function EvaluationDetailPage() {
     });
   };
 
-  // 修复音频URL - 直接使用后端地址
-  const getFullAudioUrl = (audioUrl: string): string => {
-    if (!audioUrl) return '';
-    if (audioUrl.startsWith('http')) return audioUrl;
-    // 直接使用后端地址，后端已配置CORS
-    return `http://120.48.175.29:8001${audioUrl}`;
-  };
 
   // 处理查看维度详情
   const handleViewDimensions = (question: QuestionDetail) => {
@@ -242,98 +242,107 @@ export default function EvaluationDetailPage() {
     }));
   };
 
-  // 音频播放控制
-  const toggleAudio = async (question?: QuestionDetail) => {
+  // 重评估单个题目
+  const handleQuestionReevaluate = async (question: QuestionDetail) => {
     try {
-      // 如果传入了新的问题
-      if (question) {
-        // 检查音频URL是否存在
-        if (!question.speaking_audio_url) {
-          showError('该题目没有音频文件');
-          return;
-        }
-        
-        // 如果点击的是同一个题目的音频，则切换播放/暂停
-        if (isPlaying && selectedQuestion?.question_id === question.question_id && audioRef.current) {
-          audioRef.current.pause();
-          setIsPlaying(false);
-          return;
-        }
-        
-        // 如果当前有其他音频在播放，先停止
-        if (isPlaying && audioRef.current) {
-          audioRef.current.pause();
-          setIsPlaying(false);
-        }
-        
-        console.log('设置音频源:', question.question_id, getFullAudioUrl(question.speaking_audio_url));
-        setSelectedQuestion(question);
-        
-        // 等待React重新渲染音频元素
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // 再次检查音频元素是否存在
-        if (!audioRef.current) {
-          console.error('音频元素仍未找到，等待更长时间...');
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-      } else {
-        // 没有传入问题，只是切换当前音频的播放状态
-        if (isPlaying && audioRef.current) {
-          audioRef.current.pause();
-          setIsPlaying(false);
-          return;
-        }
-      }
-
-      if (!audioRef.current) {
-        console.error('音频元素未找到，无法播放');
-        showError('音频播放器初始化失败，请重试');
+      // 检查是否已经在重评估中
+      if (reevaluatingQuestions.has(question.question_id)) {
+        showError('该题目正在重新评估中，请稍候...');
         return;
       }
 
-      console.log('尝试播放音频:', audioRef.current.src);
-      
-      // 检查音频是否已加载
-      if (audioRef.current.readyState < 2) {
-        console.log('音频未加载完成，等待加载...');
-        await new Promise((resolve, reject) => {
-          const audio = audioRef.current!;
-          const timeout = setTimeout(() => {
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.removeEventListener('error', onError);
-            reject(new Error('音频文件不存在或加载超时，请检查网络连接'));
-          }, 5000);
-          
-          const onCanPlay = () => {
-            clearTimeout(timeout);
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.removeEventListener('error', onError);
-            resolve(void 0);
-          };
-          const onError = (_e: Event) => {
-            clearTimeout(timeout);
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.removeEventListener('error', onError);
-            reject(new Error('音频文件不存在或格式不支持'));
-          };
-          audio.addEventListener('canplay', onCanPlay);
-          audio.addEventListener('error', onError);
-          audio.load(); // 重新加载音频
-        });
+      // 检查必要参数
+      if (!userId || !quizId) {
+        showError('缺少必要参数，无法重新评估');
+        return;
       }
-      
-      await audioRef.current.play();
-      setIsPlaying(true);
-      console.log('音频播放成功');
-      
+
+      // 确认重评估
+      const confirmed = window.confirm(
+        `确定要重新评估题目"${question.question_id}"吗？\n\n` +
+        `题目内容：${question.question_content}\n` +
+        `当前正确性得分：${Math.round(question.scores.correctness_score * 100)}%\n` +
+        `当前流畅度得分：${Math.round(question.scores.fluency_score * 100)}%\n` +
+        `预计用时：30-60秒\n\n` +
+        `重新评估将更新该题目的评估结果，此操作不可撤销。`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      // 添加到重评估列表
+      setReevaluatingQuestions(prev => new Set([...prev, question.question_id]));
+
+      // 显示进度窗口
+      setShowProgress(true);
+
+      // 启动重评估
+      await reevaluateQuestion(
+        parseInt(userId), 
+        question.question_id,
+        quizId,
+        {
+          aiModel: 'auto',
+          onProgress: (status) => {
+            console.log(`题目 ${question.question_id} 进度更新:`, status);
+            // 更新进度组件
+            if (progressRef.current) {
+              progressRef.current.addTask(status.task_id, status, question.question_id);
+            }
+          },
+          onComplete: (result) => {
+            console.log(`题目 ${question.question_id} 重评估完成:`, result);
+            
+            showSuccess(`题目 ${question.question_id} 重新评估完成！`);
+            
+            // 移除重评估状态
+            setReevaluatingQuestions(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(question.question_id);
+              return newSet;
+            });
+            
+            // 刷新评估数据
+            fetchEvaluationDetail();
+            
+            // 延迟关闭进度窗口
+            setTimeout(() => {
+              setShowProgress(false);
+              if (progressRef.current) {
+                progressRef.current.reset();
+              }
+            }, 2000);
+          },
+          onError: (error) => {
+            console.error(`题目 ${question.question_id} 重评估失败:`, error);
+            // 移除重评估状态
+            setReevaluatingQuestions(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(question.question_id);
+              return newSet;
+            });
+            // 关闭进度窗口
+            setShowProgress(false);
+            if (progressRef.current) {
+              progressRef.current.reset();
+            }
+          }
+        }
+      );
+
     } catch (error) {
-      console.error('音频播放失败:', error);
-      setIsPlaying(false);
-      if (error instanceof Error) {
-        showError(`音频播放失败: ${error.message}`);
-      } else {
-        showError('音频播放失败: 音频文件可能不存在或网络连接有问题');
+      console.error('重新评估失败:', error);
+      // 移除重评估状态
+      setReevaluatingQuestions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(question.question_id);
+        return newSet;
+      });
+      // 关闭进度窗口
+      setShowProgress(false);
+      if (progressRef.current) {
+        progressRef.current.reset();
       }
     }
   };
@@ -529,14 +538,8 @@ export default function EvaluationDetailPage() {
                       </button>
                     </td>
                     <td className="px-6 py-5 text-center">
-                      {question.questionDetail.speaking_audio_url ? (
-                        <button 
-                          onClick={() => toggleAudio(question.questionDetail)}
-                          className="inline-flex items-center justify-center w-8 h-8 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-full transition-colors"
-                          title={`${isPlaying && selectedQuestion?.question_id === question.questionDetail.question_id ? '暂停' : '播放'}音频`}
-                        >
-                          <i className={`fa-solid ${isPlaying && selectedQuestion?.question_id === question.questionDetail.question_id ? 'fa-pause' : 'fa-play'} text-sm`}></i>
-                        </button>
+                      {question.questionDetail.speaking_audio_info?.has_audio ? (
+                        <AudioPlayer evaluationId={question.questionDetail.speaking_audio_info.evaluation_id} />
                       ) : (
                         <span className="text-gray-400 text-sm">-</span>
                       )}
@@ -564,9 +567,26 @@ export default function EvaluationDetailPage() {
                     </td>
                     <td className="px-6 py-5 text-center">
                       <button 
-                        className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors underline"
+                        onClick={() => handleQuestionReevaluate(question.questionDetail)}
+                        disabled={reevaluatingQuestions.has(question.questionDetail.question_id)}
+                        className={cn(
+                          "inline-flex items-center px-3 py-1 rounded-md text-sm font-medium transition-colors",
+                          reevaluatingQuestions.has(question.questionDetail.question_id)
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "text-green-600 hover:text-green-800 hover:bg-green-50"
+                        )}
                       >
-                        重评估
+                        {reevaluatingQuestions.has(question.questionDetail.question_id) ? (
+                          <>
+                            <i className="fa-solid fa-spinner fa-spin mr-1"></i>
+                            评估中
+                          </>
+                        ) : (
+                          <>
+                            <i className="fa-solid fa-refresh mr-1"></i>
+                            重评估
+                          </>
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -599,12 +619,9 @@ export default function EvaluationDetailPage() {
               <div className="bg-blue-50 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-blue-700 font-medium">问题内容</span>
-                  <button 
-                    onClick={() => toggleAudio()}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <i className={`fa-solid ${isPlaying ? 'fa-pause' : 'fa-play'} text-sm`}></i>
-                  </button>
+                  {selectedQuestion.speaking_audio_info?.has_audio && (
+                    <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
+                  )}
                 </div>
                 <p className="text-gray-800">{selectedQuestion.question_content}</p>
               </div>
@@ -778,52 +795,20 @@ export default function EvaluationDetailPage() {
         </div>
       )}
 
-      {/* 隐藏的音频元素 */}
-      {selectedQuestion?.speaking_audio_url && (
-        <audio 
-          key={selectedQuestion.question_id}
-          ref={audioRef}
-          preload="metadata"
-          onLoadedData={() => {
-            console.log('音频加载完成:', getFullAudioUrl(selectedQuestion.speaking_audio_url));
-            console.log('音频就绪状态:', audioRef.current?.readyState);
-          }}
-          onLoadStart={() => console.log('开始加载音频')}
-          onCanPlay={() => console.log('音频可以播放')}
-          onError={(e) => {
-            const audioUrl = getFullAudioUrl(selectedQuestion.speaking_audio_url);
-            console.error('音频加载失败:', audioUrl);
-            console.error('错误事件:', e);
-            setIsPlaying(false);
-            // 显示更详细的错误信息
-            if (audioRef.current) {
-              console.error('音频错误详情:', {
-                url: audioUrl,
-                networkState: audioRef.current.networkState,
-                readyState: audioRef.current.readyState,
-                error: audioRef.current.error?.code,
-                errorMessage: audioRef.current.error?.message
-              });
-            }
-          }}
-          onEnded={() => {
-            console.log('音频播放结束');
-            setIsPlaying(false);
-          }}
-          onPause={() => {
-            console.log('音频暂停');
-            setIsPlaying(false);
-          }}
-          onPlay={() => {
-            console.log('音频开始播放');
-            setIsPlaying(true);
-          }}
-        >
-          <source src={getFullAudioUrl(selectedQuestion.speaking_audio_url)} type="audio/wav" />
-          <source src={getFullAudioUrl(selectedQuestion.speaking_audio_url)} type="audio/mpeg" />
-          您的浏览器不支持音频播放。
-        </audio>
-      )}
+      {/* 重评估进度组件 */}
+      <ReevaluationProgress
+        ref={progressRef}
+        isVisible={showProgress}
+        onClose={() => {
+          setShowProgress(false);
+          if (progressRef.current) {
+            progressRef.current.reset();
+          }
+        }}
+        title="单题重新评估进度"
+        taskType="question"
+      />
+
     </div>
   );
 }

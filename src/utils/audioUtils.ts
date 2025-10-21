@@ -21,12 +21,22 @@ export interface AudioData {
  * 按照文档API指南实现
  */
 export async function getAudioToken(evaluationId: number): Promise<AudioData> {
+  console.log('getAudioToken 调用参数:', { evaluationId, type: typeof evaluationId });
+  
+  // 验证参数
+  if (!evaluationId || typeof evaluationId !== 'number' || isNaN(evaluationId)) {
+    throw new Error(`无效的评估ID: ${evaluationId} (类型: ${typeof evaluationId})`);
+  }
+
   const adminToken = TokenManager.getAccessToken();
   if (!adminToken) {
     throw new Error('未找到管理员令牌，请重新登录');
   }
 
-  const response = await fetch(`/api/v1/admin/audio/signed-url/${evaluationId}`, {
+  const url = `/api/v1/admin/audio/signed-url/${evaluationId}`;
+  console.log('请求音频令牌URL:', url);
+
+  const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${adminToken}`,
       'Content-Type': 'application/json'
@@ -34,6 +44,12 @@ export async function getAudioToken(evaluationId: number): Promise<AudioData> {
   });
   
   if (!response.ok) {
+    console.error('音频令牌请求失败:', { 
+      status: response.status, 
+      statusText: response.statusText, 
+      url: url 
+    });
+    
     if (response.status === 401) {
       throw new Error('认证失败，请重新登录');
     }
@@ -46,7 +62,20 @@ export async function getAudioToken(evaluationId: number): Promise<AudioData> {
         throw new Error('No audio: 该评估没有音频文件');
       }
     }
-    throw new Error(`获取音频令牌失败: ${response.status}`);
+    if (response.status === 502) {
+      throw new Error('音频服务暂时不可用（502错误），请稍后重试或联系管理员');
+    }
+    if (response.status >= 500) {
+      throw new Error(`服务器内部错误 (${response.status})，请稍后重试或联系管理员`);
+    }
+    
+    // 尝试获取详细错误信息
+    try {
+      const errorData = await response.json();
+      throw new Error(`获取音频令牌失败 (${response.status}): ${errorData.message || errorData.detail || response.statusText}`);
+    } catch (jsonError) {
+      throw new Error(`获取音频令牌失败: ${response.status} ${response.statusText}`);
+    }
   }
   
   const result = await response.json();

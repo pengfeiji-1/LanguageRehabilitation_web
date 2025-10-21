@@ -205,11 +205,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* 移动端遮罩 */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* 侧边导航栏 */}
       <aside 
         className={`${
           sidebarOpen ? 'w-64' : 'w-20'
-        } bg-white shadow-md transition-all duration-300 ease-in-out z-20 flex flex-col`}
+        } ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } bg-white shadow-md transition-all duration-300 ease-in-out z-20 flex flex-col fixed lg:relative inset-y-0 left-0`}
       >
         {/* 品牌标识 */}
         <div className={`flex items-center h-16 px-4 border-b ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
@@ -294,33 +304,33 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </aside>
       
       {/* 主内容区域 */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         {/* 顶部导航栏 */}
         <header className="bg-white shadow-sm z-10">
           <div className="flex items-center justify-between h-16 px-4">
-            <div className="flex items-center">
+            <div className="flex items-center min-w-0">
               <button 
                 onClick={toggleSidebar}
-                className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none mr-2"
+                className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none mr-2 lg:mr-2"
               >
                 <i className={`fa-solid ${sidebarOpen ? 'fa-bars-staggered' : 'fa-bars'}`}></i>
               </button>
-              <h1 className="text-lg font-semibold text-gray-900">
+              <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                 {getCurrentPageName()}
               </h1>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
               {/* 待审批消息图标 - 仅对超级管理员显示 */}
               {isSuperAdmin && (
                 <Link
                   to="/admin/users"
-                  className="relative p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none transition-colors"
+                  className="relative p-1 sm:p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none transition-colors"
                   title={`待审批用户 (${pendingCount})`}
                 >
-                  <i className="fa-solid fa-bell text-lg"></i>
+                  <i className="fa-solid fa-bell text-base sm:text-lg"></i>
                   {pendingCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                    <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
                       {pendingCount > 99 ? '99+' : pendingCount}
                     </span>
                   )}
@@ -337,7 +347,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
         
         {/* 页面内容 */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-3 sm:p-4 lg:p-6">
           {children}
         </main>
       </div>

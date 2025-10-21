@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { WabReport } from '@/types/wab';
 import { cn } from '@/lib/utils';
 import { adminAPI } from '@/lib/api';
 import { showError, showSuccess } from '@/lib/toast';
+import { useReevaluation } from '@/lib/reevaluation';
+import ReevaluationProgress from '@/components/ReevaluationProgress';
 
 export default function WabReportList() {
   const [reports, setReports] = useState<WabReport[]>([]);
@@ -15,6 +17,12 @@ export default function WabReportList() {
     page: 1,
     per_page: 10
   });
+
+  // 重评估相关状态
+  const [showProgress, setShowProgress] = useState(false);
+  const [reevaluatingReports, setReevaluatingReports] = useState<Set<string>>(new Set());
+  const progressRef = useRef<any>(null);
+  const { reevaluateQuiz } = useReevaluation();
 
   // 获取报告列表数据
   const fetchReports = async (isRefresh = false, page = 1) => {
@@ -77,19 +85,119 @@ export default function WabReportList() {
     fetchReports(true, pagination.page);
   };
 
-  const handleReevaluate = async (reportId: string) => {
+  const handleReevaluate = async (report: WabReport) => {
     try {
-      const response = await adminAPI.reevaluateWabReport(reportId);
-      if (response.success) {
-        showSuccess(response.message || '重新评估成功');
-        // 重新评估后刷新列表
-        handleRefresh();
-      } else {
-        throw new Error('重新评估失败');
+      // 检查是否已经在重评估中
+      if (reevaluatingReports.has(report.id)) {
+        showError('该试卷正在重新评估中，请稍候...');
+        return;
       }
+
+      // 确认重评估
+      const confirmed = window.confirm(
+        `确定要重新评估试卷"${report.quizId}"吗？\n\n` +
+        `评估人：${report.evaluatorName}\n` +
+        `题目数量：${report.questionCount}题\n` +
+        `预计用时：${Math.ceil(report.questionCount * 0.5)}-${report.questionCount}分钟\n\n` +
+        `重新评估将更新所有评估结果，此操作不可撤销。`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      // 添加到重评估列表
+      setReevaluatingReports(prev => new Set([...prev, report.id]));
+
+      // 显示进度窗口
+      setShowProgress(true);
+
+      // 启动重评估
+      await reevaluateQuiz(
+        parseInt(report.evaluatorId), 
+        report.quizId,
+        {
+          aiModel: 'auto',
+          onProgress: (taskId, status) => {
+            console.log(`任务进度更新: ${taskId}`, status);
+            // 更新进度组件
+            if (progressRef.current) {
+              // 如果是初始状态，先添加任务
+              if (status.status === 'pending' && status.progress === 0) {
+                progressRef.current.addTask(taskId, status, status.question_id);
+              } else {
+                // 否则更新现有任务状态
+                progressRef.current.updateTaskStatus(taskId, status);
+              }
+            }
+          },
+          onTaskComplete: (taskId, status) => {
+            console.log(`子任务完成: ${taskId}`, status);
+            if (progressRef.current) {
+              progressRef.current.updateTaskStatus(taskId, status);
+            }
+          },
+          onAllComplete: (results) => {
+            console.log('所有任务完成:', results);
+            
+            // 统计完成情况
+            const successful = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+            
+            if (failed === 0) {
+              showSuccess(`试卷重新评估完成！成功评估 ${successful} 个题目`);
+            } else {
+              showError(`试卷重新评估完成，但有 ${failed} 个题目评估失败`);
+            }
+            
+            // 移除重评估状态
+            setReevaluatingReports(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(report.id);
+              return newSet;
+            });
+            
+            // 刷新列表数据
+            handleRefresh();
+            
+            // 延迟关闭进度窗口
+            setTimeout(() => {
+              setShowProgress(false);
+              if (progressRef.current) {
+                progressRef.current.reset();
+              }
+            }, 2000);
+          },
+          onError: (error) => {
+            console.error('重评估失败:', error);
+            // 移除重评估状态
+            setReevaluatingReports(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(report.id);
+              return newSet;
+            });
+            // 关闭进度窗口
+            setShowProgress(false);
+            if (progressRef.current) {
+              progressRef.current.reset();
+            }
+          }
+        }
+      );
+
     } catch (error) {
       console.error('重新评估失败:', error);
-      showError(error instanceof Error ? error.message : '重新评估失败');
+      // 移除重评估状态
+      setReevaluatingReports(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(report.id);
+        return newSet;
+      });
+      // 关闭进度窗口
+      setShowProgress(false);
+      if (progressRef.current) {
+        progressRef.current.reset();
+      }
     }
   };
 
@@ -228,10 +336,26 @@ export default function WabReportList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <button
-                        onClick={() => handleReevaluate(report.id)}
-                        className="inline-flex items-center px-3 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded-md text-sm font-medium transition-colors"
+                        onClick={() => handleReevaluate(report)}
+                        disabled={reevaluatingReports.has(report.id)}
+                        className={cn(
+                          "inline-flex items-center px-3 py-1 rounded-md text-sm font-medium transition-colors",
+                          reevaluatingReports.has(report.id)
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-green-100 hover:bg-green-200 text-green-700"
+                        )}
                       >
-                        重新评估
+                        {reevaluatingReports.has(report.id) ? (
+                          <>
+                            <i className="fa-solid fa-spinner fa-spin mr-1"></i>
+                            评估中
+                          </>
+                        ) : (
+                          <>
+                            <i className="fa-solid fa-refresh mr-1"></i>
+                            重新评估
+                          </>
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -281,6 +405,20 @@ export default function WabReportList() {
           </div>
         </div>
       )}
+
+      {/* 重评估进度组件 */}
+      <ReevaluationProgress
+        ref={progressRef}
+        isVisible={showProgress}
+        onClose={() => {
+          setShowProgress(false);
+          if (progressRef.current) {
+            progressRef.current.reset();
+          }
+        }}
+        title="试卷重新评估进度"
+        taskType="quiz"
+      />
     </div>
   );
 }

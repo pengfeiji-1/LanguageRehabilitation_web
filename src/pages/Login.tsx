@@ -180,7 +180,7 @@ export default function Login() {
 
   return (
     <div 
-      className="min-h-screen relative"
+      className="min-h-screen relative flex flex-col lg:block"
       style={{ 
         backgroundImage: 'url(/login_bg.jpeg)',
         backgroundSize: 'cover',
@@ -191,12 +191,12 @@ export default function Login() {
       {/* 背景遮罩 */}
       <div className="absolute inset-0 bg-black bg-opacity-20"></div>
       
-      {/* 顶部左上角公司logo */}
-      <div className="absolute top-3 left-3 z-30">
+      {/* 顶部Logo - 响应式调整 */}
+      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 lg:top-3 lg:left-3 z-30">
         <img 
           src="/logo.png" 
           alt="智能语翼" 
-          className="h-[120px] w-auto"
+          className="h-12 w-auto sm:h-16 md:h-20 lg:h-[120px]"
           style={{ 
             filter: 'hue-rotate(180deg) saturate(1.5) brightness(0.9)',
             mixBlendMode: 'normal'
@@ -204,262 +204,274 @@ export default function Login() {
         />
       </div>
       
-      {/* 左侧产品信息 */}
-      <div className="absolute left-12 top-1/2 transform -translate-y-1/2 text-white z-10 max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-5xl font-bold mb-4">智能语翼管理平台</h1>
-          <p className="text-xl opacity-90">数据管理 / 评估分析 / 质量控制</p>
+      {/* 主要内容区域 */}
+      <div className="relative z-10 min-h-screen flex flex-col lg:block">
+        {/* 桌面端：左侧产品信息 */}
+        <div className="hidden lg:block absolute left-12 top-1/2 transform -translate-y-1/2 text-white max-w-2xl">
+          <div className="mb-8">
+            <h1 className="text-4xl xl:text-5xl font-bold mb-4">智能语翼管理平台</h1>
+            <p className="text-lg xl:text-xl opacity-90">数据管理 / 评估分析 / 质量控制</p>
+          </div>
+          
+          {/* 产品卡片展示区域 */}
+          <div className="grid grid-cols-2 gap-4 xl:gap-6 mt-12">
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 xl:p-6 border border-white border-opacity-20">
+              <div className="flex items-center mb-3">
+                <i className="fa-solid fa-chart-bar text-blue-300 text-xl xl:text-2xl mr-3"></i>
+                <h3 className="text-base xl:text-lg font-semibold">数据统计</h3>
+              </div>
+              <p className="text-xs xl:text-sm opacity-90">全面的数据分析与统计报告，实时监控系统运行状态</p>
+            </div>
+            
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 xl:p-6 border border-white border-opacity-20">
+              <div className="flex items-center mb-3">
+                <i className="fa-solid fa-clipboard-list text-green-300 text-xl xl:text-2xl mr-3"></i>
+                <h3 className="text-base xl:text-lg font-semibold">评估管理</h3>
+              </div>
+              <p className="text-xs xl:text-sm opacity-90">试卷管理、评估提交、结果分析，提升评估准确度</p>
+            </div>
+            
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 xl:p-6 border border-white border-opacity-20">
+              <div className="flex items-center mb-3">
+                <i className="fa-solid fa-users-cog text-purple-300 text-xl xl:text-2xl mr-3"></i>
+                <h3 className="text-base xl:text-lg font-semibold">用户管理</h3>
+              </div>
+              <p className="text-xs xl:text-sm opacity-90">用户权限控制，会话管理，操作日志跟踪</p>
+            </div>
+            
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 xl:p-6 border border-white border-opacity-20">
+              <div className="flex items-center mb-3">
+                <i className="fa-solid fa-shield-alt text-orange-300 text-xl xl:text-2xl mr-3"></i>
+                <h3 className="text-base xl:text-lg font-semibold">系统监控</h3>
+              </div>
+              <p className="text-xs xl:text-sm opacity-90">API监控，安全审计，系统性能实时监测</p>
+            </div>
+          </div>
         </div>
-        
-        {/* 产品卡片展示区域 */}
-        <div className="grid grid-cols-2 gap-6 mt-12">
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-white border-opacity-20">
-            <div className="flex items-center mb-3">
-              <i className="fa-solid fa-chart-bar text-blue-300 text-2xl mr-3"></i>
-              <h3 className="text-lg font-semibold">数据统计</h3>
-            </div>
-            <p className="text-sm opacity-90">全面的数据分析与统计报告，实时监控系统运行状态</p>
-          </div>
-          
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-white border-opacity-20">
-            <div className="flex items-center mb-3">
-              <i className="fa-solid fa-clipboard-list text-green-300 text-2xl mr-3"></i>
-              <h3 className="text-lg font-semibold">评估管理</h3>
-            </div>
-            <p className="text-sm opacity-90">试卷管理、评估提交、结果分析，提升评估准确度</p>
-          </div>
-          
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-white border-opacity-20">
-            <div className="flex items-center mb-3">
-              <i className="fa-solid fa-users-cog text-purple-300 text-2xl mr-3"></i>
-              <h3 className="text-lg font-semibold">用户管理</h3>
-            </div>
-            <p className="text-sm opacity-90">用户权限控制，会话管理，操作日志跟踪</p>
-          </div>
-          
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-white border-opacity-20">
-            <div className="flex items-center mb-3">
-              <i className="fa-solid fa-shield-alt text-orange-300 text-2xl mr-3"></i>
-              <h3 className="text-lg font-semibold">系统监控</h3>
-            </div>
-            <p className="text-sm opacity-90">API监控，安全审计，系统性能实时监测</p>
-          </div>
+
+        {/* 移动端/平板：顶部标题 */}
+        <div className="lg:hidden pt-20 pb-8 px-4 text-white text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">智能语翼管理平台</h1>
+          <p className="text-sm sm:text-base md:text-lg opacity-90">数据管理 / 评估分析 / 质量控制</p>
         </div>
-      </div>
 
-      {/* 右上角登录区域 */}
-      <div className="absolute top-20 right-32 w-[28rem] z-20">
-        <div className="bg-white rounded-2xl shadow-2xl p-6">
-          <div className="mb-5 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">欢迎来到智能语翼</h2>
-          </div>
-          {/* 标签页头部 */}
-          <div className="mb-5">
-            <div className="flex bg-gray-50 rounded-lg p-1">
-              <button
-                onClick={() => setLoginType('account')}
-                className={cn(
-                  "flex-1 py-2 px-4 text-center font-medium transition-colors rounded-md text-sm",
-                  loginType === 'account'
-                    ? "text-blue-600 bg-white shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
+        {/* 登录区域 - 响应式布局 */}
+        <div className="flex-1 flex items-center justify-center px-4 pb-8 lg:items-start lg:justify-end lg:pt-20 lg:pr-8 xl:pr-32">
+          <div className="w-full max-w-md lg:max-w-lg xl:w-[28rem]">
+            <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6">
+              <div className="mb-4 sm:mb-5 text-center">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">欢迎来到智能语翼</h2>
+              </div>
+              
+              {/* 标签页头部 */}
+              <div className="mb-4 sm:mb-5">
+                <div className="flex bg-gray-50 rounded-lg p-1">
+                  <button
+                    onClick={() => setLoginType('account')}
+                    className={cn(
+                      "flex-1 py-2 px-3 sm:px-4 text-center font-medium transition-colors rounded-md text-sm",
+                      loginType === 'account'
+                        ? "text-blue-600 bg-white shadow-sm"
+                        : "text-gray-600 hover:text-gray-800"
+                    )}
+                  >
+                    账号登录
+                  </button>
+                  <button
+                    onClick={() => setLoginType('phone')}
+                    className={cn(
+                      "flex-1 py-2 px-3 sm:px-4 text-center font-medium transition-colors rounded-md text-sm",
+                      loginType === 'phone'
+                        ? "text-blue-600 bg-white shadow-sm"
+                        : "text-gray-600 hover:text-gray-800"
+                    )}
+                  >
+                    手机号登录
+                  </button>
+                </div>
+              </div>
+
+              {/* 登录表单内容 */}
+              <div className="min-h-[200px] sm:min-h-[240px]">
+                {/* 账号登录表单 */}
+                {loginType === 'account' && (
+                  <form onSubmit={handleAccountLogin} className="space-y-3 sm:space-y-4">
+                    
+                    <div>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        className="block w-full px-3 sm:px-4 h-10 sm:h-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
+                        placeholder="请输入账号名/账号ID"
+                      />
+                    </div>
+                    
+                    <div>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="block w-full px-3 sm:px-4 h-10 sm:h-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
+                        placeholder="请输入登录密码"
+                      />
+                    </div>
+                    
+                    <div className="text-xs leading-relaxed">
+                      <span className="text-gray-500">
+                        登录视为您已阅读并同意智能语翼
+                      </span>
+                      <a href="#" className="text-blue-600 hover:text-blue-500 mx-1">服务条款</a>
+                      <span className="text-gray-500">和</span>
+                      <a href="#" className="text-blue-600 hover:text-blue-500 mx-1">隐私政策</a>
+                    </div>
+                    
+                    {/* 空白占位区域 */}
+                    <div className="h-3 sm:h-[20px]"></div>
+                    
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full flex justify-center h-10 sm:h-12 items-center px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-400 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <>
+                          <i className="fa-solid fa-spinner fa-spin mr-2"></i> 登录中...
+                        </>
+                      ) : (
+                        "登录"
+                      )}
+                    </button>
+                    
+                    {/* 登录选项 */}
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                      <a href="#" className="text-blue-600 hover:text-blue-500">忘记账号</a>
+                      <a href="#" className="text-blue-600 hover:text-blue-500">忘记密码</a>
+                    </div>
+                  </form>
                 )}
-              >
-                账号登录
-              </button>
-              <button
-                onClick={() => setLoginType('phone')}
-                className={cn(
-                  "flex-1 py-2 px-4 text-center font-medium transition-colors rounded-md text-sm",
-                  loginType === 'phone'
-                    ? "text-blue-600 bg-white shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
-                )}
-              >
-                手机号登录
-              </button>
-            </div>
-          </div>
 
-          {/* 登录表单内容 */}
-          <div className="min-h-[240px]">
-            {/* 账号登录表单 */}
-            {loginType === 'account' && (
-              <form onSubmit={handleAccountLogin} className="space-y-3">
-                
-                <div>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    className="block w-full px-4 h-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
-                    placeholder="请输入账号名/账号ID"
-                  />
-                </div>
-                
-                <div>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="block w-full px-4 h-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
-                    placeholder="请输入登录密码"
-                  />
-                </div>
-                
-                <div className="text-xs">
-                  <span className="text-gray-500">
-                    登录视为您已阅读并同意智能语翼
-                  </span>
-                  <a href="#" className="text-blue-600 hover:text-blue-500 mx-1">服务条款</a>
-                  <span className="text-gray-500">和</span>
-                  <a href="#" className="text-blue-600 hover:text-blue-500 mx-1">隐私政策</a>
-                </div>
-                
-                {/* 空白占位区域 */}
-                <div className="h-[20px]"></div>
-                
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex justify-center h-12 items-center px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-400 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <i className="fa-solid fa-spinner fa-spin mr-2"></i> 登录中...
-                    </>
-                  ) : (
-                    "登录"
-                  )}
-                </button>
-                
-                {/* 登录选项 */}
-                <div className="flex items-center justify-between text-sm">
-                  <a href="#" className="text-blue-600 hover:text-blue-500">忘记账号</a>
-                  <a href="#" className="text-blue-600 hover:text-blue-500">忘记密码</a>
-                </div>
-              </form>
-            )}
-
-            {/* 手机号登录表单 */}
-            {loginType === 'phone' && (
-              <form onSubmit={handlePhoneLogin} className="space-y-3">
-                
-                {/* 手机号输入 */}
-                <div>
-                  <div className="flex rounded-md shadow-sm">
-                    <div className="relative">
-                      <select
-                        value={countryCode}
-                        onChange={(e) => setCountryCode(e.target.value)}
-                        className="h-12 pl-3 pr-8 border border-r-0 border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm bg-white appearance-none transition-colors duration-200"
-                        style={{ backgroundImage: 'none' }}
-                      >
-                        <option value="+86">+86</option>
-                        <option value="+1">+1</option>
-                        <option value="+44">+44</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                        <i className="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                {/* 手机号登录表单 */}
+                {loginType === 'phone' && (
+                  <form onSubmit={handlePhoneLogin} className="space-y-3 sm:space-y-4">
+                    
+                    {/* 手机号输入 */}
+                    <div>
+                      <div className="flex rounded-md shadow-sm">
+                        <div className="relative">
+                          <select
+                            value={countryCode}
+                            onChange={(e) => setCountryCode(e.target.value)}
+                            className="h-10 sm:h-12 pl-3 pr-8 border border-r-0 border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm bg-white appearance-none transition-colors duration-200"
+                            style={{ backgroundImage: 'none' }}
+                          >
+                            <option value="+86">+86</option>
+                            <option value="+1">+1</option>
+                            <option value="+44">+44</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+                            <i className="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                          </div>
+                        </div>
+                        <input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          required
+                          className="flex-1 h-10 sm:h-12 px-3 border border-gray-300 rounded-r-md focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
+                          placeholder="请输入手机号"
+                        />
                       </div>
                     </div>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                      className="flex-1 h-12 px-3 border border-gray-300 rounded-r-md focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
-                      placeholder="请输入手机号"
-                    />
-                  </div>
-                </div>
 
-                {/* 验证码输入 */}
-                <div>
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={verificationCode}
-                      onChange={(e) => setVerificationCode(e.target.value)}
-                      required
-                      className="flex-1 h-12 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
-                      placeholder="请输入验证码"
-                      maxLength={6}
-                    />
+                    {/* 验证码输入 */}
+                    <div>
+                      <div className="flex gap-2 sm:gap-3">
+                        <input
+                          type="text"
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value)}
+                          required
+                          className="flex-1 h-10 sm:h-12 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
+                          placeholder="请输入验证码"
+                          maxLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSendCode}
+                          disabled={countdown > 0 || !phone}
+                          className="px-3 sm:px-4 h-10 sm:h-12 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                        >
+                          {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 服务条款同意 */}
+                    <div className="text-xs leading-relaxed">
+                      <span className="text-gray-500">
+                        登录视为您已阅读并同意智能语翼
+                      </span>
+                      <a href="#" className="text-blue-600 hover:text-blue-500 mx-1">服务条款</a>
+                      <span className="text-gray-500">和</span>
+                      <a href="#" className="text-blue-600 hover:text-blue-500 mx-1">隐私政策</a>
+                    </div>
+                    
+                    {/* 空白占位区域 */}
+                    <div className="h-3 sm:h-[20px]"></div>
+                    
                     <button
-                      type="button"
-                      onClick={handleSendCode}
-                      disabled={countdown > 0 || !phone}
-                      className="px-4 h-12 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      type="submit"
+                      disabled={loading || !agreed}
+                      className="w-full flex justify-center h-10 sm:h-12 items-center px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-400 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                      {loading ? (
+                        <>
+                          <i className="fa-solid fa-spinner fa-spin mr-2"></i> 登录中...
+                        </>
+                      ) : (
+                        "登录"
+                      )}
+                    </button>
+                    
+                    {/* 登录选项 */}
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                      <a href="#" className="text-blue-600 hover:text-blue-500">忘记账号</a>
+                      <a href="#" className="text-blue-600 hover:text-blue-500">忘记密码</a>
+                    </div>
+                  </form>
+                )}
+
+                {/* 其他登录方式 */}
+                <div className="mt-4 sm:mt-5">
+                  <div className="text-center text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">其他登录方式</div>
+                  <div className="flex justify-center">
+                    <button className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
+                      <i className="fa-brands fa-weixin text-green-600"></i>
                     </button>
                   </div>
                 </div>
 
-                {/* 服务条款同意 */}
-                <div className="text-xs">
-                  <span className="text-gray-500">
-                    登录视为您已阅读并同意智能语翼
-                  </span>
-                  <a href="#" className="text-blue-600 hover:text-blue-500 mx-1">服务条款</a>
-                  <span className="text-gray-500">和</span>
-                  <a href="#" className="text-blue-600 hover:text-blue-500 mx-1">隐私政策</a>
+                {/* 注册提示 */}
+                <div className="mt-4 sm:mt-5 text-center text-xs sm:text-sm text-gray-600">
+                  没有账号？
+                  <button 
+                    onClick={() => navigate('/register')}
+                    className="text-blue-600 hover:text-blue-500 ml-1 underline bg-transparent border-none cursor-pointer"
+                  >
+                    现在就注册
+                  </button>
                 </div>
-                
-                {/* 空白占位区域 */}
-                <div className="h-[20px]"></div>
-                
-                <button
-                  type="submit"
-                  disabled={loading || !agreed}
-                  className="w-full flex justify-center h-12 items-center px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-400 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <i className="fa-solid fa-spinner fa-spin mr-2"></i> 登录中...
-                    </>
-                  ) : (
-                    "登录"
-                  )}
-                </button>
-                
-                {/* 登录选项 */}
-                <div className="flex items-center justify-between text-sm">
-                  <a href="#" className="text-blue-600 hover:text-blue-500">忘记账号</a>
-                  <a href="#" className="text-blue-600 hover:text-blue-500">忘记密码</a>
-                </div>
-              </form>
-            )}
-
-            {/* 其他登录方式 */}
-            <div className="mt-5">
-              <div className="text-center text-sm text-gray-600 mb-4">其他登录方式</div>
-              <div className="flex justify-center">
-                <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  <i className="fa-brands fa-weixin text-green-600"></i>
-                </button>
               </div>
-            </div>
-
-            {/* 注册提示 */}
-            <div className="mt-5 text-center text-sm text-gray-600">
-              没有账号？
-              <button 
-                onClick={() => navigate('/register')}
-                className="text-blue-600 hover:text-blue-500 ml-1 underline bg-transparent border-none cursor-pointer"
-              >
-                现在就注册
-              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 底部版权信息 */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-white text-sm text-center z-10">
+      {/* 底部版权信息 - 响应式调整 */}
+      <div className="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 text-white text-xs sm:text-sm text-center z-10 px-4">
         <div className="mb-2">版权所有©北京智能语翼医疗科技有限责任公司2025</div>
       </div>
     </div>
