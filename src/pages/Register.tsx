@@ -119,11 +119,11 @@ export default function Register() {
       
       const result = await adminAPI.register(registerData) as any;
       
-      if (result?.success && result?.data) {
-        showSuccess(`注册成功！用户名：${result.data.username}，请登录后等待超级管理员审批。`);
-      } else {
-        showSuccess(`注册成功！请登录后等待超级管理员审批。`);
-      }
+      const successMessage = result?.success && result?.data 
+        ? `注册成功！用户名：${result.data.username}，请登录后等待超级管理员审批。` 
+        : `注册成功！请登录后等待超级管理员审批。`;
+        
+      showSuccess(successMessage + ' 2秒后自动跳转到登录页面...');
       
       // 重置表单
       setFormData({
@@ -134,8 +134,10 @@ export default function Register() {
         email: ''
       });
       
-      // 可以选择跳转到管理员列表页面
-      // navigate('/admin-list');
+      // 2秒后自动跳转到登录页面
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
       
     } catch (error) {
       console.error('注册错误:', error);

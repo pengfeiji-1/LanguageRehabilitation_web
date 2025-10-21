@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminAPI } from '@/lib/api';
 import { showError, showSuccess } from '@/lib/toast';
+import { getAudioToken } from '@/utils/audioUtils';
 import { 
   AnnotationDetailResponse, 
   AnnotationData, 
@@ -136,7 +137,6 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
     try {
       console.log('开始预加载音频文件，评估ID:', evaluationId);
       
-      const { getAudioToken } = await import('@/utils/audioUtils');
       // 步骤1：获取音频令牌
       const audioData = await getAudioToken(evaluationId);
       

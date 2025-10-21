@@ -2,7 +2,7 @@
  * 退出登录处理函数
  */
 import { adminAPI, TokenManager } from './api';
-import { toast } from 'sonner';
+import { showError } from './toast';
 
 export const handleLogout = async () => {
   try {

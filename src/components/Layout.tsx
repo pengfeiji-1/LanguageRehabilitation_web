@@ -225,14 +225,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <i className="fa-solid fa-chevron-left"></i>
             </button>
           )}
-          {!sidebarOpen && (
-            <button 
-              onClick={toggleSidebar}
-              className="absolute top-4 right-2 p-1 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
-            >
-              <i className="fa-solid fa-chevron-right"></i>
-            </button>
-          )}
         </div>
         
         {/* 导航菜单 */}

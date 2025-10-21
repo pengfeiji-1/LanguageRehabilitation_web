@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { TokenManager } from '@/lib/api';
+import { getAudioToken } from '@/utils/audioUtils';
 
 interface AudioPlayerProps {
   evaluationId?: number;
@@ -17,22 +17,6 @@ export default function AudioPlayer({ evaluationId, audioUrl, className, onError
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // 根据文档API指南实现音频获取逻辑
-  const getAudioToken = async (evalId: number) => {
-    const response = await fetch(`/api/v1/admin/audio/signed-url/${evalId}`, {
-      headers: {
-        'Authorization': `Bearer ${TokenManager.getAccessToken()}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`获取音频令牌失败: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    return result.data;
-  };
 
   const loadAudio = async (evalId: number) => {
     try {
