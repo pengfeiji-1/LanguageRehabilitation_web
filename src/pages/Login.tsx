@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
-import { toast } from 'sonner';
+import { showError, showSuccess, showInfo } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { adminAPI, TokenManager } from '@/lib/api';
 
@@ -36,9 +36,12 @@ export default function Login() {
       const adminInfo = TokenManager.getAdminInfo();
       if (adminInfo) {
         setIsAuthenticated(true);
-        toast.success(`欢迎回来，${adminInfo.real_name}！`);
+        showSuccess(`欢迎回来，${adminInfo.real_name}！`);
         navigate('/dashboard');
       }
+    } else {
+      // 确保清除isAuthenticated状态，处理从其他页面退出登录的情况
+      localStorage.removeItem('isAuthenticated');
     }
   }, [navigate, setIsAuthenticated]);
 
@@ -60,21 +63,21 @@ export default function Login() {
   // 发送验证码
   const handleSendCode = async () => {
     if (!phone) {
-      toast.error('请输入手机号');
+      showError('请输入手机号');
       return;
     }
     
     if (!validatePhone(phone)) {
-      toast.error('请输入正确的手机号格式');
+      showError('请输入正确的手机号格式');
       return;
     }
 
     try {
       // 这里后续会接入真实的短信API
-      toast.success('验证码已发送');
+      showSuccess('验证码已发送');
       setCountdown(60);
     } catch (error) {
-      toast.error('发送验证码失败，请重试');
+      showError('发送验证码失败，请重试');
     }
   };
 
@@ -83,7 +86,7 @@ export default function Login() {
     e.preventDefault();
     
     if (!username || !password) {
-      toast.error('请输入用户名和密码');
+      showError('请输入用户名和密码');
       return;
     }
 
@@ -100,16 +103,23 @@ export default function Login() {
       // 设置认证状态
       setIsAuthenticated(true);
       
-      // 显示成功消息
-      const roleName = getRoleName(loginResponse.admin_info.role);
-      toast.success(`${roleName}登录成功！欢迎，${loginResponse.admin_info.real_name}`);
+      // 检查用户状态并显示相应消息
+      const userRole = loginResponse.admin_info.role;
+      const roleName = getRoleName(userRole);
       
-      // 跳转到仪表盘
-      navigate('/dashboard');
+      if (userRole === 'viewer') {
+        // 待审批用户
+        showInfo('登录成功！您的管理员申请正在审批中，请等待超级管理员审核。');
+        navigate('/dashboard'); // 会被RoleBasedRoute拦截并显示待审批界面
+      } else {
+        // 已批准用户
+        showSuccess(`${roleName}登录成功！欢迎，${loginResponse.admin_info.real_name}`);
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error('登录错误:', error);
       const errorMessage = error instanceof Error ? error.message : '登录失败，请重试';
-      toast.error(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -130,22 +140,22 @@ export default function Login() {
     e.preventDefault();
     
     if (!agreed) {
-      toast.error('请先同意服务条款和隐私政策');
+      showError('请先同意服务条款和隐私政策');
       return;
     }
 
     if (!phone) {
-      toast.error('请输入手机号');
+      showError('请输入手机号');
       return;
     }
 
     if (!validatePhone(phone)) {
-      toast.error('请输入正确的手机号格式');
+      showError('请输入正确的手机号格式');
       return;
     }
 
     if (!verificationCode) {
-      toast.error('请输入验证码');
+      showError('请输入验证码');
       return;
     }
 
@@ -155,14 +165,14 @@ export default function Login() {
       // 目前手机号登录使用模拟验证，实际项目中应该调用对应的API
       if (phone === TEST_PHONE && verificationCode === TEST_CODE) {
         setIsAuthenticated(true);
-        toast.success('手机号登录成功！');
+        showSuccess('手机号登录成功！');
         navigate('/dashboard');
       } else {
-        toast.error('手机号或验证码错误');
+        showError('手机号或验证码错误');
       }
     } catch (error) {
       console.error('手机号登录错误:', error);
-      toast.error('登录失败，请重试');
+      showError('登录失败，请重试');
     } finally {
       setLoading(false);
     }

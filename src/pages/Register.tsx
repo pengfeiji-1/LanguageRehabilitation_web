@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { showError, showSuccess, showWarning } from '@/lib/toast';
 import { adminAPI, TokenManager } from '@/lib/api';
 
-// 密码强度检查函数
+// 密码强度检查函数 - 根据API文档要求
 const checkPasswordStrength = (password: string) => {
   const checks = {
-    length: password.length >= 8,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /\d/.test(password),
-    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password)
+    length: password.length >= 6, // 至少6个字符
+    letter: /[a-zA-Z]/.test(password), // 包含至少1个字母（大写或小写）
+    number: /\d/.test(password), // 包含至少1个数字
   };
   
   const score = Object.values(checks).filter(Boolean).length;
@@ -18,8 +16,8 @@ const checkPasswordStrength = (password: string) => {
   return {
     checks,
     score,
-    strength: score >= 5 ? 'strong' : score >= 3 ? 'medium' : 'weak',
-    isValid: score >= 4 // 至少需要4项满足
+    strength: score === 3 ? 'strong' : score >= 2 ? 'medium' : 'weak',
+    isValid: score === 3 // 必须满足所有3项要求
   };
 };
 
@@ -32,19 +30,18 @@ export default function Register() {
     password: '',
     confirmPassword: '',
     real_name: '',
-    email: '',
-    role: 'admin' as 'admin' | 'viewer'
+    email: ''
   });
   
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(checkPasswordStrength(''));
   const [showPassword, setShowPassword] = useState(false);
   
-  // 检查是否已登录，如果已登录且不是超级管理员则给出提示
+  // 检查是否已登录，如果已登录则提示可以直接访问管理面板
   useEffect(() => {
     const adminInfo = TokenManager.getAdminInfo();
-    if (adminInfo && adminInfo.role !== 'super_admin') {
-      toast.warning('提示：您当前以普通管理员身份登录，创建管理员需要超级管理员权限');
+    if (adminInfo) {
+      showWarning(`您当前已以 ${adminInfo.real_name} 身份登录，可以直接访问管理面板`);
     }
   }, []);
   
@@ -65,37 +62,37 @@ export default function Register() {
   // 表单验证
   const validateForm = () => {
     if (!formData.username.trim()) {
-      toast.error('请输入用户名');
+      showError('请输入用户名');
       return false;
     }
     
     if (formData.username.length < 3) {
-      toast.error('用户名至少需要3个字符');
+      showError('用户名至少需要3个字符');
       return false;
     }
     
     if (!formData.password) {
-      toast.error('请输入密码');
+      showError('请输入密码');
       return false;
     }
     
     if (!passwordStrength.isValid) {
-      toast.error('密码强度不够，请至少满足4项要求');
+      showError('密码强度不符合要求，请满足所有3项基本要求');
       return false;
     }
     
     if (formData.password !== formData.confirmPassword) {
-      toast.error('两次输入的密码不一致');
+      showError('两次输入的密码不一致');
       return false;
     }
     
     if (!formData.real_name.trim()) {
-      toast.error('请输入真实姓名');
+      showError('请输入真实姓名');
       return false;
     }
     
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      toast.error('邮箱格式不正确');
+      showError('邮箱格式不正确');
       return false;
     }
     
@@ -113,32 +110,20 @@ export default function Register() {
     setLoading(true);
     
     try {
-      // 检查登录状态和权限
-      const token = TokenManager.getAccessToken();
-      const adminInfo = TokenManager.getAdminInfo();
-      
-      if (!token || !adminInfo) {
-        toast.error('请先登录管理员账户才能创建新管理员');
-        navigate('/login');
-        return;
-      }
-      
-      if (adminInfo.role !== 'super_admin') {
-        toast.error('权限不足：仅超级管理员可以创建新管理员账户');
-        return;
-      }
-      
       const registerData = {
         username: formData.username.trim(),
         password: formData.password,
         real_name: formData.real_name.trim(),
-        email: formData.email.trim() || undefined,
-        role: formData.role
+        email: formData.email.trim() || undefined
       };
       
-      const result = await adminAPI.register(registerData, token);
+      const result = await adminAPI.register(registerData) as any;
       
-      toast.success(`管理员账户创建成功！用户名：${result.admin_info.username}`);
+      if (result?.success && result?.data) {
+        showSuccess(`注册成功！用户名：${result.data.username}，请登录后等待超级管理员审批。`);
+      } else {
+        showSuccess(`注册成功！请登录后等待超级管理员审批。`);
+      }
       
       // 重置表单
       setFormData({
@@ -146,8 +131,7 @@ export default function Register() {
         password: '',
         confirmPassword: '',
         real_name: '',
-        email: '',
-        role: 'admin'
+        email: ''
       });
       
       // 可以选择跳转到管理员列表页面
@@ -155,8 +139,22 @@ export default function Register() {
       
     } catch (error) {
       console.error('注册错误:', error);
-      const errorMessage = error instanceof Error ? error.message : '注册失败，请重试';
-      toast.error(errorMessage);
+      let errorMessage = error instanceof Error ? error.message : '注册失败，请重试';
+      
+      // 根据API文档处理特定错误类型
+      if (errorMessage.includes('用户名已存在') || errorMessage.includes('USERNAME_EXISTS')) {
+        errorMessage = '用户名已被使用，请更换一个用户名';
+      } else if (errorMessage.includes('邮箱已被使用') || errorMessage.includes('EMAIL_EXISTS')) {
+        errorMessage = '邮箱地址已被注册，请使用其他邮箱';
+      } else if (errorMessage.includes('密码强度不足') || errorMessage.includes('WEAK_PASSWORD')) {
+        errorMessage = '密码强度不足，请确保至少6个字符，包含至少1个字母和1个数字';
+      } else if (errorMessage.includes('不能通过此接口创建超级管理员') || errorMessage.includes('超级管理员')) {
+        errorMessage = '不能创建超级管理员账户';
+      } else if (errorMessage.includes('Not authenticated') || errorMessage.includes('认证失败') || errorMessage.includes('未授权')) {
+        errorMessage = '当前系统配置需要管理员权限才能注册新用户。请联系系统管理员。';
+      }
+      
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -194,10 +192,13 @@ export default function Register() {
             />
           </div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            创建管理员账户
+            注册管理员账户
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            需要超级管理员权限才能创建管理员账户
+            注册后需要等待超级管理员审批才能使用完整功能
+          </p>
+          <p className="mt-1 text-center text-xs text-gray-500">
+            如遇到权限问题，请联系系统管理员或使用管理员账户登录后创建新用户
           </p>
         </div>
 
@@ -254,21 +255,14 @@ export default function Register() {
               />
             </div>
 
-            {/* 角色选择 */}
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                管理员角色 <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="admin">普通管理员 - 完整管理权限</option>
-                <option value="viewer">只读管理员 - 仅查看权限</option>
-              </select>
+            {/* 角色说明 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-start">
+                <i className="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+                <div className="text-sm text-blue-700">
+                  <strong>默认角色：</strong>注册成功后将获得查看员权限，需要超级管理员审批后升级为管理员。
+                </div>
+              </div>
             </div>
 
             {/* 密码 */}
@@ -306,20 +300,15 @@ export default function Register() {
                     </span>
                   </div>
                   <div className="space-y-1 text-xs">
-                    <div className={passwordStrength.checks.length ? 'text-green-600' : 'text-gray-400'}>
-                      ✓ 至少8个字符
+                    <div className="text-xs text-gray-600 mb-1">必须满足以下所有要求：</div>
+                    <div className={passwordStrength.checks.length ? 'text-green-600' : 'text-red-500'}>
+                      {passwordStrength.checks.length ? '✓' : '✗'} 至少6个字符
                     </div>
-                    <div className={passwordStrength.checks.uppercase ? 'text-green-600' : 'text-gray-400'}>
-                      ✓ 包含大写字母
+                    <div className={passwordStrength.checks.letter ? 'text-green-600' : 'text-red-500'}>
+                      {passwordStrength.checks.letter ? '✓' : '✗'} 包含至少1个字母（大写或小写）
                     </div>
-                    <div className={passwordStrength.checks.lowercase ? 'text-green-600' : 'text-gray-400'}>
-                      ✓ 包含小写字母
-                    </div>
-                    <div className={passwordStrength.checks.number ? 'text-green-600' : 'text-gray-400'}>
-                      ✓ 包含数字
-                    </div>
-                    <div className={passwordStrength.checks.special ? 'text-green-600' : 'text-gray-400'}>
-                      ✓ 包含特殊字符
+                    <div className={passwordStrength.checks.number ? 'text-green-600' : 'text-red-500'}>
+                      {passwordStrength.checks.number ? '✓' : '✗'} 包含至少1个数字
                     </div>
                   </div>
                 </div>
@@ -361,12 +350,12 @@ export default function Register() {
               {loading ? (
                 <>
                   <i className="fa-solid fa-spinner fa-spin mr-2"></i>
-                  创建中...
+                  注册中...
                 </>
               ) : (
                 <>
                   <i className="fa-solid fa-user-plus mr-2"></i>
-                  创建管理员账户
+                  注册管理员账户
                 </>
               )}
             </button>

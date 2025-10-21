@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { WabReport } from '@/types/wab';
 import { cn } from '@/lib/utils';
 import { adminAPI } from '@/lib/api';
-import { toast } from 'react-hot-toast';
+import { showError, showSuccess } from '@/lib/toast';
 
 export default function WabReportList() {
   const [reports, setReports] = useState<WabReport[]>([]);
@@ -51,13 +51,13 @@ export default function WabReportList() {
       
       // 如果是认证错误，提示用户重新登录
       if (errorMessage.includes('认证') || errorMessage.includes('登录') || errorMessage.includes('token') || errorMessage.includes('令牌')) {
-        toast.error('认证失败，请重新登录');
+        showError('认证失败，请重新登录');
         // 延迟跳转到登录页面
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
       } else {
-        toast.error(errorMessage);
+        showError(errorMessage);
       }
       
       // 如果API失败，设置为空数组
@@ -81,7 +81,7 @@ export default function WabReportList() {
     try {
       const response = await adminAPI.reevaluateWabReport(reportId);
       if (response.success) {
-        toast.success(response.message || '重新评估成功');
+        showSuccess(response.message || '重新评估成功');
         // 重新评估后刷新列表
         handleRefresh();
       } else {
@@ -89,7 +89,7 @@ export default function WabReportList() {
       }
     } catch (error) {
       console.error('重新评估失败:', error);
-      toast.error(error instanceof Error ? error.message : '重新评估失败');
+      showError(error instanceof Error ? error.message : '重新评估失败');
     }
   };
 

@@ -3,7 +3,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { EvaluationDetailResponse, QuestionDetail, DIMENSION_NAMES, ParsedAphasiaType } from '@/types/wab';
 import { cn } from '@/lib/utils';
 import { adminAPI } from '@/lib/api';
-import { toast } from 'react-hot-toast';
+import { showError, showSuccess } from '@/lib/toast';
 
 export default function EvaluationDetailPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -47,24 +47,24 @@ export default function EvaluationDetailPage() {
       
       // 根据错误类型显示不同的提示
       if (errorMessage.includes('认证') || errorMessage.includes('登录') || errorMessage.includes('token') || errorMessage.includes('令牌')) {
-        toast.error('认证失败，请重新登录');
+        showError('认证失败，请重新登录');
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
       } else if (errorMessage.includes('无效的数据格式') || errorMessage.includes('JSON')) {
-        toast.error('服务器数据格式错误，请联系管理员或稍后重试');
+        showError('服务器数据格式错误，请联系管理员或稍后重试');
       } else if (errorMessage.includes('网络连接')) {
-        toast.error('网络连接失败，请检查网络后重试');
+        showError('网络连接失败，请检查网络后重试');
       } else if (errorMessage.includes('服务器错误')) {
-        toast.error('服务器暂时无法处理请求，请稍后重试');
+        showError('服务器暂时无法处理请求，请稍后重试');
       } else if (errorMessage.includes('quiz_id为必需参数')) {
-        toast.error('没有评估详情信息');
+        showError('没有评估详情信息');
         setTimeout(() => {
           window.location.href = '/wab/reports';
         }, 2000);
         return;
       } else {
-        toast.error(errorMessage);
+        showError(errorMessage);
       }
       
       setEvaluationData(null);
@@ -447,7 +447,7 @@ export default function EvaluationDetailPage() {
 
       {/* 对话结果弹窗 */}
       {showDialogModal && selectedQuestion && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
@@ -509,7 +509,7 @@ export default function EvaluationDetailPage() {
 
       {/* 维度详情弹窗 */}
       {showDimensionsModal && selectedQuestion && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">

@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '@/contexts/authContext';
-import { TokenManager } from '@/lib/api';
+import { TokenManager, adminAPI } from '@/lib/api';
+import LogoutConfirmModal from './LogoutConfirmModal';
+import UserDropdownMenu from './UserDropdownMenu';
 
 // 导航菜单项类型定义
 interface NavItem {
@@ -28,9 +30,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { logout } = useContext(AuthContext);
   
+  // 退出登录确认弹窗状态
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  
+  // 待审批数量状态
+  const [pendingCount, setPendingCount] = useState(0);
+  
   // 获取当前用户信息
   const adminInfo = TokenManager.getAdminInfo();
   const isSuperAdmin = adminInfo?.role === 'super_admin';
+  const isPendingUser = adminInfo?.role === 'viewer';
+
   
   // 切换菜单展开/折叠状态
   const toggleMenu = (path: string) => {
@@ -42,12 +53,40 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       return newExpanded;
     });
   };
+
+  // 获取待审批数量
+  const fetchPendingCount = async () => {
+    // 只有超级管理员才显示待审批消息
+    if (!isSuperAdmin) {
+      return;
+    }
+    
+    try {
+      const response = await adminAPI.getApprovalStatistics();
+      if (response.success && response.data) {
+        setPendingCount(response.data.pending_count || 0);
+      }
+    } catch (error) {
+      console.error('获取待审批数量失败:', error);
+      // 静默处理错误，不影响主要功能
+    }
+  };
   
   // 导航菜单数据
-   // 导航菜单数据 - 重构为层级结构
+  // 导航菜单数据 - 重构为层级结构
   
-  const navItems: NavItem[] = [
-    { path: '/dashboard', name: '数据概览', icon: 'fa-chart-pie' },
+  let navItems: NavItem[] = [];
+  
+  if (isPendingUser) {
+    // 待审批用户只能看到基本功能
+    navItems = [
+      { path: '/dashboard', name: '审批状态', icon: 'fa-hourglass-half' },
+      { path: '/settings', name: '个人设置', icon: 'fa-user-cog' },
+    ];
+  } else {
+    // 正常管理员菜单
+    navItems = [
+      { path: '/dashboard', name: '数据概览', icon: 'fa-chart-pie' },
     { 
       path: '/users', 
       name: '用户管理', 
@@ -72,14 +111,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       icon: 'fa-chart-bar',
       children: [
             { path: '/wab/reports', name: '报告列表', icon: 'fa-list' },
+            { path: '/wab/annotations', name: '评估标注', icon: 'fa-edit' }, // 新增标注功能入口
       ]
     },
-    { path: '/settings', name: '系统设置', icon: 'fa-cog' },
-  ];
-  
-  // 如果是超级管理员，添加管理员管理菜单
-  if (isSuperAdmin) {
-    navItems.splice(1, 0, { path: '/register', name: '创建管理员', icon: 'fa-user-plus' });
+    ];
+    
+    // 超级管理员的管理功能已移至用户下拉菜单中
   }
   
   // 检查路径是否匹配（支持子路由）
@@ -121,6 +158,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return '控制台';
   };
   
+  // 获取待审批数量 - 仅对超级管理员
+  useEffect(() => {
+    if (isSuperAdmin) {
+      // 立即获取一次
+      fetchPendingCount();
+      
+      // 每30秒更新一次
+      const interval = setInterval(fetchPendingCount, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isSuperAdmin]);
+
   // 根据当前路由自动展开对应的父菜单
   useEffect(() => {
     const currentPath = location.pathname;
@@ -162,17 +212,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         } bg-white shadow-md transition-all duration-300 ease-in-out z-20 flex flex-col`}
       >
         {/* 品牌标识 */}
-        <div className="flex items-center justify-between h-16 px-4 border-b">
-          <div className={`flex items-center ${!sidebarOpen && 'justify-center w-full'}`}>
-            <i className="fa-solid fa-chart-line text-blue-600 text-xl mr-2"></i>
+        <div className={`flex items-center h-16 px-4 border-b ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
+          <div className={`flex items-center ${!sidebarOpen && 'justify-center'}`}>
+            <i className={`fa-solid fa-chart-line text-blue-600 text-xl ${sidebarOpen ? 'mr-2' : ''}`}></i>
             {sidebarOpen && <span className="font-bold text-lg">管理系统</span>}
           </div>
-          <button 
-            onClick={toggleSidebar}
-            className="p-1 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
-          >
-            <i className={`fa-solid ${sidebarOpen ? 'fa-chevron-left' : 'fa-chevron-right'}`}></i>
-          </button>
+          {sidebarOpen && (
+            <button 
+              onClick={toggleSidebar}
+              className="p-1 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
+            >
+              <i className="fa-solid fa-chevron-left"></i>
+            </button>
+          )}
+          {!sidebarOpen && (
+            <button 
+              onClick={toggleSidebar}
+              className="absolute top-4 right-2 p-1 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
+            >
+              <i className="fa-solid fa-chevron-right"></i>
+            </button>
+          )}
         </div>
         
         {/* 导航菜单 */}
@@ -183,18 +243,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                  {item.children ? (
                    <>
                        {/* 检查是否有子项与当前路径匹配 */}
-                       <button
-                        className={`flex items-center justify-between w-full px-3 py-3 text-sm font-medium rounded-md transition-colors ${
-                          isMenuItemActive(item)
-                            ? 'bg-blue-100 text-blue-700'
-                           : 'text-gray-700 hover:bg-gray-100'
-                       }`}
-                        onClick={() => toggleMenu(item.path)}
-                      >
-                        <div className="flex items-center">
-                          <i className={`fa-solid ${item.icon} ${sidebarOpen ? 'mr-3' : 'mx-auto'}`}></i>
-                          {sidebarOpen && <span>{item.name}</span>}
-                        </div>
+                      <button
+                       className={`flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'} w-full px-3 py-3 text-sm font-medium rounded-md transition-colors ${
+                         isMenuItemActive(item)
+                           ? 'bg-blue-100 text-blue-700'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                       onClick={() => toggleMenu(item.path)}
+                     >
+                       <div className={`flex items-center ${!sidebarOpen && 'justify-center w-full'}`}>
+                         <i className={`fa-solid ${item.icon} ${sidebarOpen ? 'mr-3' : ''}`}></i>
+                         {sidebarOpen && <span>{item.name}</span>}
+                       </div>
                         {sidebarOpen && (
                           <i className={`fa-solid fa-chevron-down transition-transform duration-200 ${
                             expandedMenus.includes(item.path) ? 'rotate-180' : ''
@@ -223,17 +283,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                      )}
                    </>
                  ) : (
-                   <Link
-                     to={item.path}
-                     className={`flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors ${
-                        isPathActive(item.path, location.pathname)
-                          ? 'bg-blue-100 text-blue-700'
-                         : 'text-gray-700 hover:bg-gray-100'
-                     }`}
-                   >
-                     <i className={`fa-solid ${item.icon} ${sidebarOpen ? 'mr-3' : 'mx-auto'}`}></i>
-                     {sidebarOpen && <span>{item.name}</span>}
-                   </Link>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center ${sidebarOpen ? '' : 'justify-center'} px-3 py-3 text-sm font-medium rounded-md transition-colors ${
+                       isPathActive(item.path, location.pathname)
+                         ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <i className={`fa-solid ${item.icon} ${sidebarOpen ? 'mr-3' : ''}`}></i>
+                    {sidebarOpen && <span>{item.name}</span>}
+                  </Link>
                  )}
                </li>
              ))}
@@ -259,26 +319,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* 用户信息 */}
-              <div className="relative group">
-                <button className="flex items-center text-sm focus:outline-none">
-                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                    <i className="fa-solid fa-user"></i>
-                  </div>
-                  {sidebarOpen && (
-                    <span className="ml-2 text-gray-700 group-hover:text-blue-600 transition-colors">管理员</span>
+              {/* 待审批消息图标 - 仅对超级管理员显示 */}
+              {isSuperAdmin && (
+                <Link
+                  to="/admin/users"
+                  className="relative p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none transition-colors"
+                  title={`待审批用户 (${pendingCount})`}
+                >
+                  <i className="fa-solid fa-bell text-lg"></i>
+                  {pendingCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                      {pendingCount > 99 ? '99+' : pendingCount}
+                    </span>
                   )}
-                </button>
-              </div>
-              
-              {/* 退出登录 */}
-              <button
-                onClick={logout}
-                className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
-                title="退出登录"
-              >
-                <i className="fa-solid fa-sign-out-alt"></i>
-              </button>
+                </Link>
+              )}
+
+              {/* 用户下拉菜单 */}
+              <UserDropdownMenu
+                onLogout={() => setShowLogoutModal(true)}
+                sidebarOpen={sidebarOpen}
+              />
             </div>
           </div>
         </header>
@@ -288,6 +349,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+      
+      {/* 退出登录确认弹窗 */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        loading={logoutLoading}
+        onConfirm={async () => {
+          setLogoutLoading(true);
+          try {
+            await logout();
+          } catch (error) {
+            console.error('退出登录失败:', error);
+            setLogoutLoading(false);
+          }
+          // 注意：成功退出后会跳转页面，所以不需要重置loading状态
+        }}
+        onCancel={() => {
+          if (!logoutLoading) {
+            setShowLogoutModal(false);
+          }
+        }}
+        userInfo={adminInfo}
+      />
     </div>
   );
 }

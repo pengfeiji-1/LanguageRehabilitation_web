@@ -3,9 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { WabReportDetail as WabReportDetailType, DialogMessage, AnnotationData } from '@/types/wab';
 import { cn } from '@/lib/utils';
 import { adminAPI } from '@/lib/api';
-import { toast } from 'react-hot-toast';
+import { showError, showSuccess } from '@/lib/toast';
 import AudioPlayer from './components/AudioPlayer';
-import AnnotationInput from './components/AnnotationInput';
 import DialogDetailModal from './components/DialogDetailModal';
 import FluencyAnalysisModal from './components/FluencyAnalysisModal';
 
@@ -38,7 +37,7 @@ export default function WabReportDetail() {
       }
     } catch (error) {
       console.error('获取报告详情失败:', error);
-      toast.error(error instanceof Error ? error.message : '获取报告详情失败');
+      showError(error instanceof Error ? error.message : '获取报告详情失败');
       setReportDetail(null);
     } finally {
       setLoading(false);
@@ -57,7 +56,7 @@ export default function WabReportDetail() {
     try {
       const response = await adminAPI.saveWabReportAnnotations(id, annotationData);
       if (response.success) {
-        toast.success(response.message || '标注保存成功');
+        showSuccess(response.message || '标注保存成功');
         // 重新获取报告详情以更新数据
         fetchReportDetail();
       } else {
@@ -65,7 +64,7 @@ export default function WabReportDetail() {
       }
     } catch (error) {
       console.error('保存标注失败:', error);
-      toast.error(error instanceof Error ? error.message : '保存标注失败');
+      showError(error instanceof Error ? error.message : '保存标注失败');
     }
   };
 
@@ -240,15 +239,6 @@ export default function WabReportDetail() {
                         >
                           查看详情
                         </button>
-                        <AnnotationInput
-                          value={question.annotations?.fluency}
-                          placeholder="流畅度标注..."
-                          onSave={(value) => handleSaveAnnotation({
-                            questionId: question.id,
-                            fluencyAnnotation: value
-                          })}
-                          size="sm"
-                        />
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -256,15 +246,6 @@ export default function WabReportDetail() {
                         <span className="text-sm font-medium text-gray-900">
                           {question.correctnessScore}
                         </span>
-                        <AnnotationInput
-                          value={question.annotations?.correctness}
-                          placeholder="正确性标注..."
-                          onSave={(value) => handleSaveAnnotation({
-                            questionId: question.id,
-                            correctnessAnnotation: value
-                          })}
-                          size="sm"
-                        />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">

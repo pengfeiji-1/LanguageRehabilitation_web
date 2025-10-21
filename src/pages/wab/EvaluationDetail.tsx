@@ -3,7 +3,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { EvaluationDetailResponse, QuestionDetail, DIMENSION_NAMES, ParsedAphasiaType } from '@/types/wab';
 import { cn } from '@/lib/utils';
 import { adminAPI } from '@/lib/api';
-import { toast } from 'react-hot-toast';
+import { showError } from '@/lib/toast';
 
 export default function EvaluationDetailPage() {
   console.log('EvaluationDetailPage component rendered');
@@ -20,13 +20,6 @@ export default function EvaluationDetailPage() {
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const audioRef = useRef<HTMLAudioElement>(null);
   
-  // 人工标注状态
-  const [manualAnnotations, setManualAnnotations] = useState<Record<string, {
-    correctness_score?: number;
-    fluency_score?: number;
-    dimensions?: Record<string, string>; // 维度标注：维度key -> 是/否
-    notes?: string;
-  }>>({});
 
   // 获取查询参数
   const quizId = searchParams.get('quiz_id');
@@ -61,24 +54,24 @@ export default function EvaluationDetailPage() {
       
       // 根据错误类型显示不同的提示
       if (errorMessage.includes('认证') || errorMessage.includes('登录') || errorMessage.includes('token') || errorMessage.includes('令牌')) {
-        toast.error('认证失败，请重新登录');
+        showError('认证失败，请重新登录');
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
       } else if (errorMessage.includes('无效的数据格式') || errorMessage.includes('JSON')) {
-        toast.error('服务器数据格式错误，请联系管理员或稍后重试');
+        showError('服务器数据格式错误，请联系管理员或稍后重试');
       } else if (errorMessage.includes('网络连接')) {
-        toast.error('网络连接失败，请检查网络后重试');
+        showError('网络连接失败，请检查网络后重试');
       } else if (errorMessage.includes('服务器错误')) {
-        toast.error('服务器暂时无法处理请求，请稍后重试');
+        showError('服务器暂时无法处理请求，请稍后重试');
       } else if (errorMessage.includes('quiz_id为必需参数')) {
-        toast.error('没有评估详情信息');
+        showError('没有评估详情信息');
         setTimeout(() => {
           window.location.href = '/wab/reports';
         }, 2000);
         return;
       } else {
-        toast.error(errorMessage);
+        showError(errorMessage);
       }
       
       setEvaluationData(null);
@@ -256,7 +249,7 @@ export default function EvaluationDetailPage() {
       if (question) {
         // 检查音频URL是否存在
         if (!question.speaking_audio_url) {
-          alert('该题目没有音频文件');
+          showError('该题目没有音频文件');
           return;
         }
         
@@ -295,7 +288,7 @@ export default function EvaluationDetailPage() {
 
       if (!audioRef.current) {
         console.error('音频元素未找到，无法播放');
-        alert('音频播放器初始化失败，请重试');
+        showError('音频播放器初始化失败，请重试');
         return;
       }
 
@@ -338,9 +331,9 @@ export default function EvaluationDetailPage() {
       console.error('音频播放失败:', error);
       setIsPlaying(false);
       if (error instanceof Error) {
-        alert(`音频播放失败: ${error.message}`);
+        showError(`音频播放失败: ${error.message}`);
       } else {
-        alert('音频播放失败: 音频文件可能不存在或网络连接有问题');
+        showError('音频播放失败: 音频文件可能不存在或网络连接有问题');
       }
     }
   };
@@ -353,43 +346,6 @@ export default function EvaluationDetailPage() {
     }));
   };
 
-  // 更新人工标注分数
-  const updateManualScore = (questionId: string, type: 'correctness_score' | 'fluency_score', value: number) => {
-    setManualAnnotations(prev => ({
-      ...prev,
-      [questionId]: {
-        ...prev[questionId],
-        [type]: value
-      }
-    }));
-  };
-
-  // 更新人工标注维度
-  const updateManualDimension = (questionId: string, dimensionKey: string, value: string) => {
-    setManualAnnotations(prev => ({
-      ...prev,
-      [questionId]: {
-        ...prev[questionId],
-        dimensions: {
-          ...prev[questionId]?.dimensions,
-          [dimensionKey]: value
-        }
-      }
-    }));
-  };
-
-  // 保存人工标注（可以后续连接到API）
-  const saveManualAnnotations = async () => {
-    try {
-      console.log('保存人工标注:', manualAnnotations);
-      // TODO: 调用API保存标注数据
-      // await adminAPI.saveManualAnnotations(userId, quizId, manualAnnotations);
-      alert('标注已保存（当前为演示模式）');
-    } catch (error) {
-      console.error('保存标注失败:', error);
-      alert('保存失败，请重试');
-    }
-  };
 
   if (loading) {
     return (
@@ -464,7 +420,7 @@ export default function EvaluationDetailPage() {
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-full space-y-5">
         
-        {/* 顶部返回按钮和保存按钮 */}
+        {/* 顶部返回按钮 */}
         <div className="flex items-center justify-between mb-4 px-5">
           <Link
             to="/wab/reports"
@@ -473,13 +429,6 @@ export default function EvaluationDetailPage() {
             <i className="fa-solid fa-arrow-left text-xl mr-2"></i>
             <span className="font-medium">返回列表</span>
           </Link>
-          <button
-            onClick={saveManualAnnotations}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <i className="fa-solid fa-save mr-2"></i>
-            <span className="font-medium">保存标注</span>
-          </button>
         </div>
 
         {/* 用户信息卡片 */}
@@ -549,8 +498,6 @@ export default function EvaluationDetailPage() {
                   <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">流畅度</th>
                   <th className="px-6 py-4 text-center font-medium text-sm min-w-[100px]">正确性得分</th>
                   <th className="px-6 py-4 text-center font-medium text-sm min-w-[100px]">流畅度得分</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">人工正确性</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">人工流畅度</th>
                   <th className="px-6 py-4 text-center font-medium text-sm min-w-[100px]">重评估</th>
                 </tr>
               </thead>
@@ -616,30 +563,6 @@ export default function EvaluationDetailPage() {
                       </span>
                     </td>
                     <td className="px-6 py-5 text-center">
-                      <input
-                        type="number"
-                        min="0"
-                        max="1"
-                        step="0.1"
-                        className="w-24 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-                        value={manualAnnotations[question.questionDetail.question_id]?.correctness_score || ''}
-                        onChange={(e) => updateManualScore(question.questionDetail.question_id, 'correctness_score', parseFloat(e.target.value) || 0)}
-                        placeholder="0-1"
-                      />
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <input
-                        type="number"
-                        min="0"
-                        max="10"
-                        step="0.1"
-                        className="w-24 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-                        value={manualAnnotations[question.questionDetail.question_id]?.fluency_score || ''}
-                        onChange={(e) => updateManualScore(question.questionDetail.question_id, 'fluency_score', parseFloat(e.target.value) || 0)}
-                        placeholder="0-10"
-                      />
-                    </td>
-                    <td className="px-6 py-5 text-center">
                       <button 
                         className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors underline"
                       >
@@ -657,7 +580,7 @@ export default function EvaluationDetailPage() {
 
       {/* 对话结果弹窗 */}
       {showDialogModal && selectedQuestion && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
@@ -784,7 +707,7 @@ export default function EvaluationDetailPage() {
 
       {/* 维度详情弹窗 */}
       {showDimensionsModal && selectedQuestion && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
@@ -836,27 +759,12 @@ export default function EvaluationDetailPage() {
                               </div>
                             </div>
                             <div className="flex items-center space-x-2 ml-3">
-                              <div className="flex flex-col items-center space-y-1">
-                                <span className="text-xs text-gray-500">系统</span>
-                                <span className={cn(
-                                  "px-2 py-1 rounded text-xs font-bold text-white",
-                                  item.result === '是' ? 'bg-green-500' : 'bg-red-500'
-                                )}>
-                                  {item.result}
-                                </span>
-                              </div>
-                              <div className="flex flex-col items-center space-y-1">
-                                <span className="text-xs text-gray-500">人工</span>
-                                <select
-                                  className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                  value={manualAnnotations[selectedQuestion?.question_id || '']?.dimensions?.[item.key || ''] || ''}
-                                  onChange={(e) => selectedQuestion && item.key && updateManualDimension(selectedQuestion.question_id, item.key, e.target.value)}
-                                >
-                                  <option value="">未标注</option>
-                                  <option value="是">是</option>
-                                  <option value="否">否</option>
-                                </select>
-                              </div>
+                              <span className={cn(
+                                "px-3 py-1 rounded text-sm font-bold text-white",
+                                item.result === '是' ? 'bg-green-500' : 'bg-red-500'
+                              )}>
+                                {item.result}
+                              </span>
                             </div>
                           </div>
                         </div>

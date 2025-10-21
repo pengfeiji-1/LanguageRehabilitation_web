@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h2>登录API测试</h2>
+    
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="username">用户名：</label>
+            <input type="text" id="username" value="3333" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">密码：</label>
+            <input type="password" id="password" value="Zhixiang01!" required>
+        </div>
+        
+        <button type="submit">登录测试</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '<div class="info">正在登录...</div>';
+            
+            try {
+                console.log('开始登录请求...');
+                const response = await fetch('/api/v1/admin/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                console.log('响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('响应数据:', data);
+                
+                resultDiv.innerHTML = `<div class="success">
+登录成功！
+用户信息：
+- ID: ${data.admin_info.id}
+- 用户名: ${data.admin_info.username}
+- 真实姓名: ${data.admin_info.real_name}
+- 角色: ${data.admin_info.role}
+- 状态: ${data.admin_info.status}
+
+Token信息：
+- Access Token: ${data.access_token.substring(0, 50)}...
+- Token类型: ${data.token_type}
+- 过期时间: ${data.expires_in}秒
+                </div>`;
+                
+            } catch (error) {
+                console.error('登录失败:', error);
+                resultDiv.innerHTML = `<div class="error">
+登录失败：
+${error.message}
+
+请检查：
+1. 网络连接是否正常
+2. 后端服务是否运行
+3. 用户名和密码是否正确
+                </div>`;
+            }
+        });
+    </script>
+</body>
+</html>
