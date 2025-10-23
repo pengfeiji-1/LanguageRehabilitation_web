@@ -632,21 +632,24 @@ export default function EvaluationDetailPage() {
             {/* 内容区域 */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-6 space-y-4">
-                {/* 题目和参考答案在一行 */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-blue-50 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
+                {/* 题目和参考答案区域 */}
+                <div className="bg-blue-50 rounded-xl p-4 relative">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
                       <span className="text-blue-700 font-medium">题目：{selectedQuestion.question_content}</span>
-                      {selectedQuestion.speaking_audio_info && (
-                        <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
-                      )}
+                    </div>
+                    
+                    <div>
+                      <div className="text-gray-700 font-medium mb-2">参考答案：{selectedQuestion.correct_answer}</div>
                     </div>
                   </div>
                   
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <div className="text-gray-700 font-medium mb-2">参考答案</div>
-                    <p className="text-gray-800">{selectedQuestion.correct_answer}</p>
-                  </div>
+                  {/* 播放按钮在右上角 */}
+                  {selectedQuestion.speaking_audio_info && (
+                    <div className="absolute top-4 right-4">
+                      <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
+                    </div>
+                  )}
                 </div>
 
                 {/* 对话内容 */}
