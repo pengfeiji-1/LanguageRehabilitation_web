@@ -619,7 +619,7 @@ export default function EvaluationDetailPage() {
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-100 sticky top-0 bg-white z-20 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-gray-900">对话结果</h3>
+                <h3 className="text-xl font-semibold text-gray-900">对话详情</h3>
                 <button
                   onClick={() => setShowDialogModal(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-100 rounded-full p-3"
@@ -633,13 +633,12 @@ export default function EvaluationDetailPage() {
             <div className="p-6 space-y-4">
               {/* 问题内容 */}
               <div className="bg-blue-50 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-blue-700 font-medium">问题内容</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-700 font-medium">题目：{selectedQuestion.question_content}</span>
                   {selectedQuestion.speaking_audio_info && (
                     <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
                   )}
                 </div>
-                <p className="text-gray-800">{selectedQuestion.question_content}</p>
               </div>
 
               {/* 简化的对话显示 */}
@@ -676,46 +675,10 @@ export default function EvaluationDetailPage() {
 
               {/* 参考答案 */}
               <div className="bg-gray-50 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-700 font-medium">参考答案</span>
-                </div>
+                <div className="text-gray-700 font-medium mb-2">参考答案</div>
                 <p className="text-gray-800">{selectedQuestion.correct_answer}</p>
               </div>
 
-              {/* 评估分数和时间信息 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-xl p-4 text-center">
-                  <div className="text-gray-500 text-sm mb-1">正确性</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {Math.round(selectedQuestion.scores.correctness_score * 100)}%
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4 text-center">
-                  <div className="text-gray-500 text-sm mb-1">流畅度</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {Math.round(selectedQuestion.scores.fluency_score * 100)}%
-                  </div>
-                </div>
-              </div>
-
-              {/* 时间信息 */}
-              <div className="bg-blue-50 rounded-xl p-4">
-                <h4 className="text-blue-700 font-medium mb-2">时间统计</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">答题时间:</span>
-                    <span className="ml-2 font-medium">{selectedQuestion.answer_time}秒</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">提交时间:</span>
-                    <span className="ml-2 font-medium">{new Date(selectedQuestion.submit_time * 1000).toLocaleString()}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">创建时间:</span>
-                    <span className="ml-2 font-medium">{new Date(selectedQuestion.created_time).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
