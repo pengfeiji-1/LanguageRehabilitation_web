@@ -438,13 +438,15 @@ export default function EvaluationDetailPage() {
           </Link>
           
           {/* 查看回放按钮 */}
-          <Link
-            to={`/users/playback/${userId}${quizId ? `?quiz_id=${quizId}` : ''}`}
-            className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-sm font-medium"
-          >
-            <i className="fa-solid fa-video mr-2"></i>
-            查看回放
-          </Link>
+          {evaluationData?.basic_info && (
+            <Link
+              to={`/users/playback/${evaluationData.basic_info.user_id}${quizId ? `?quiz_id=${quizId}` : ''}`}
+              className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-sm font-medium"
+            >
+              <i className="fa-solid fa-video mr-2"></i>
+              查看回放
+            </Link>
+          )}
         </div>
 
         {/* 用户信息卡片 */}
@@ -545,8 +547,8 @@ export default function EvaluationDetailPage() {
                       </button>
                     </td>
                     <td className="px-3 py-2 text-center">
-                      {question.questionDetail.speaking_audio_url ? (
-                        <AudioPlayer audioUrl={question.questionDetail.speaking_audio_url} />
+                      {question.questionDetail.speaking_audio_info ? (
+                        <AudioPlayer evaluationId={question.questionDetail.speaking_audio_info.evaluation_id} />
                       ) : (
                         <span className="text-gray-400 text-sm">-</span>
                       )}
@@ -629,31 +631,91 @@ export default function EvaluationDetailPage() {
             </div>
             
             <div className="p-6 space-y-4">
-              {/* 播放音频按钮 */}
-              <div className="flex items-center justify-center">
-                {selectedQuestion.speaking_audio_url && (
-                  <AudioPlayer audioUrl={selectedQuestion.speaking_audio_url} />
-                )}
+              {/* 问题内容 */}
+              <div className="bg-blue-50 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-blue-700 font-medium">问题内容</span>
+                  {selectedQuestion.speaking_audio_info && (
+                    <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
+                  )}
+                </div>
+                <p className="text-gray-800">{selectedQuestion.question_content}</p>
               </div>
 
-              {/* 简化的对话轮次显示 */}
+              {/* 简化的对话显示 */}
               {selectedQuestion.user_ai_interaction && selectedQuestion.user_ai_interaction.rounds && (
                 <div className="space-y-3">
-                  <h4 className="text-lg font-medium text-gray-900 text-center">对话过程</h4>
-                  <div className="flex flex-wrap justify-center gap-3">
-                    {selectedQuestion.user_ai_interaction.rounds.map((round, index) => (
-                      <div key={index} className="flex flex-col items-center">
-                        <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">
-                          第{round.round}轮
-                        </span>
-                        <span className="text-xs text-gray-500 mt-1">
-                          {new Date(round.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  {selectedQuestion.user_ai_interaction.rounds.map((round, index) => (
+                    <div key={index} className="space-y-3">
+                      {/* AI提问 */}
+                      {round.prompt && (
+                        <div className="bg-blue-500 text-white rounded-lg px-4 py-3 max-w-[80%]">
+                          <p>{round.prompt}</p>
+                        </div>
+                      )}
+                      
+                      {/* 用户回答 */}
+                      {round.user_answer && (
+                        <div className="flex justify-end">
+                          <div className="bg-green-500 text-white rounded-lg px-4 py-3 max-w-[80%]">
+                            <p>{round.user_answer.text}</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* AI反馈 */}
+                      {round.ai_response && (
+                        <div className="bg-gray-500 text-white rounded-lg px-4 py-3 max-w-[80%]">
+                          <p>{round.ai_response}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
+
+              {/* 参考答案 */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-700 font-medium">参考答案</span>
+                </div>
+                <p className="text-gray-800">{selectedQuestion.correct_answer}</p>
+              </div>
+
+              {/* 评估分数和时间信息 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <div className="text-gray-500 text-sm mb-1">正确性</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {Math.round(selectedQuestion.scores.correctness_score * 100)}%
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <div className="text-gray-500 text-sm mb-1">流畅度</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {Math.round(selectedQuestion.scores.fluency_score * 100)}%
+                  </div>
+                </div>
+              </div>
+
+              {/* 时间信息 */}
+              <div className="bg-blue-50 rounded-xl p-4">
+                <h4 className="text-blue-700 font-medium mb-2">时间统计</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">答题时间:</span>
+                    <span className="ml-2 font-medium">{selectedQuestion.answer_time}秒</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">提交时间:</span>
+                    <span className="ml-2 font-medium">{new Date(selectedQuestion.submit_time * 1000).toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">创建时间:</span>
+                    <span className="ml-2 font-medium">{new Date(selectedQuestion.created_time).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
