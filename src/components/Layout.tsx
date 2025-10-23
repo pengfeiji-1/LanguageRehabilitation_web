@@ -93,16 +93,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       icon: 'fa-users',
       children: [
         { path: '/users/list', name: '用户列表', icon: 'fa-list' },
-
-        { path: '/users/playback', name: '训练回放', icon: 'fa-video' },
-      ]
-    },
-    { 
-      path: '/exams', 
-      name: '试卷管理', 
-      icon: 'fa-file-alt',
-      children: [
-            { path: '/exams/list', name: '试卷查看', icon: 'fa-list' },
       ]
     },
     { 

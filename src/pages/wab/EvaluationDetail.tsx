@@ -427,8 +427,8 @@ export default function EvaluationDetailPage() {
 
   return (
     <div className="h-full flex flex-col space-y-2">
-        {/* 顶部返回按钮 */}
-        <div className="pb-1">
+        {/* 顶部操作按钮 */}
+        <div className="pb-1 flex items-center justify-between">
           <Link
             to="/wab/reports"
             className="inline-flex items-center px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors text-sm"
@@ -436,6 +436,17 @@ export default function EvaluationDetailPage() {
             <i className="fa-solid fa-arrow-left text-sm mr-2"></i>
             <span>返回列表</span>
           </Link>
+          
+          {/* 查看回放按钮 */}
+          {evaluationData?.basic_info && (
+            <Link
+              to={`/users/playback/${evaluationData.basic_info.user_id}${quizId ? `?quiz_id=${quizId}` : ''}`}
+              className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-sm font-medium"
+            >
+              <i className="fa-solid fa-video mr-2"></i>
+              查看回放
+            </Link>
+          )}
         </div>
 
         {/* 用户信息卡片 */}

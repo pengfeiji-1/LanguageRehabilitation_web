@@ -12,8 +12,6 @@ import Layout from "@/components/Layout";
 import { Empty } from "@/components/Empty";
 import UserList from "@/pages/users/UserList";
 import UserDetail from "@/pages/users/UserDetail";
-import Playback from "@/pages/users/Playback";
-import ExamList from "@/pages/exams/ExamList";
 import WabReportList from "@/pages/wab/WabReportList";
 import WabReportDetail from "@/pages/wab/WabReportDetail";
 import EvaluationDetail from "@/pages/wab/EvaluationDetail";
@@ -130,23 +128,7 @@ export default function App() {
             <Route index element={<Navigate to="/users/list" replace />} />
             <Route path="list" element={<UserList />} />
             <Route path="detail/:id" element={<UserDetail />} />
-            <Route path="playback" element={<Navigate to="/exams/list" replace />} />
-            <Route path="playback/:id" element={<Playback />} />
-         </Route>
-         
-         {/* 试卷管理相关路由 */}
-         <Route 
-           path="/exams" 
-           element={
-             <RoleBasedRoute>
-               <Layout>
-                 <Outlet />
-               </Layout>
-             </RoleBasedRoute>
-           } 
-         >
-           <Route index element={<Navigate to="/exams/list" replace />} />
-            <Route path="list" element={<ExamList />} />
+            <Route path="playback/:id" element={<div className="p-8 text-center"><h2 className="text-xl font-semibold mb-4">训练回放功能</h2><p className="text-gray-600">回放功能开发中...</p></div>} />
          </Route>
          
          {/* WAB报告管理相关路由 */}

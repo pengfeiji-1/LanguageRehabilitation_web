@@ -24,14 +24,26 @@ export default function WabReportList() {
 
   // 搜索相关状态
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchType, setSearchType] = useState<'name' | 'quiz_id'>('name');
+  const [searchType, setSearchType] = useState<'name' | 'phone' | 'user_id' | 'quiz_id'>('name');
+  
+  // 高级筛选状态
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({
+    minCorrectnessScore: '',
+    minFluencyScore: '',
+    startDate: '',
+    endDate: '',
+    sortBy: 'assessment_date',
+    sortOrder: 'desc' as 'asc' | 'desc'
+  });
+  
   const { reevaluateQuiz } = useReevaluation();
   
   // 获取URL查询参数
   const [searchParams] = useSearchParams();
 
   // 获取报告列表数据
-  const fetchReports = async (isRefresh = false, page = 1, search = searchTerm, type = searchType) => {
+  const fetchReports = async (isRefresh = false, page = 1, search = searchTerm, type = searchType, filters = advancedFilters) => {
     // 优化：区分不同类型的加载状态
     const isPageChange = !isRefresh && page !== pagination.page;
     
@@ -47,13 +59,40 @@ export default function WabReportList() {
         per_page: pagination.per_page
       };
       
-      // 添加搜索参数
+      // 添加搜索参数 - 使用新的API参数名
       if (search && search.trim()) {
-        if (type === 'name') {
-          params.evaluatorName = search.trim();
-        } else if (type === 'quiz_id') {
-          params.quizId = search.trim();
+        switch (type) {
+          case 'name':
+            params.real_name = search.trim();
+            break;
+          case 'phone':
+            params.phone = search.trim();
+            break;
+          case 'user_id':
+            params.user_id = search.trim();
+            break;
+          case 'quiz_id':
+            params.quiz_id = search.trim();
+            break;
         }
+      }
+      
+      // 添加高级筛选参数
+      if (filters.minCorrectnessScore && !isNaN(parseFloat(filters.minCorrectnessScore))) {
+        params.min_correctness_score = parseFloat(filters.minCorrectnessScore);
+      }
+      if (filters.minFluencyScore && !isNaN(parseFloat(filters.minFluencyScore))) {
+        params.min_fluency_score = parseFloat(filters.minFluencyScore);
+      }
+      if (filters.startDate) {
+        params.start_date = filters.startDate;
+      }
+      if (filters.endDate) {
+        params.end_date = filters.endDate;
+      }
+      if (filters.sortBy) {
+        params.sort_by = filters.sortBy;
+        params.sort_order = filters.sortOrder;
       }
       
       const response = await adminAPI.getWabReports(params);
@@ -101,7 +140,7 @@ export default function WabReportList() {
       setSearchTerm(decodeURIComponent(userName));
       setSearchType('name');
       // 执行搜索
-      fetchReports(false, 1, decodeURIComponent(userName), 'name');
+      fetchReports(false, 1, decodeURIComponent(userName), 'name', advancedFilters);
     } else {
       // 正常加载数据
     fetchReports();
@@ -111,13 +150,13 @@ export default function WabReportList() {
   // 搜索处理
   const handleSearch = () => {
     // 重置到第一页并搜索
-    fetchReports(false, 1, searchTerm, searchType);
+    fetchReports(false, 1, searchTerm, searchType, advancedFilters);
   };
 
   // 清除搜索
   const handleClearSearch = () => {
     setSearchTerm('');
-    fetchReports(false, 1, '', searchType);
+    fetchReports(false, 1, '', searchType, advancedFilters);
     
     // 如果是从用户列表跳转过来的，清除URL参数
     if (searchParams.get('userId')) {
@@ -132,6 +171,31 @@ export default function WabReportList() {
       // 如果搜索框为空，自动清除搜索
       handleClearSearch();
     }
+  };
+  
+  // 高级筛选处理
+  const handleAdvancedFilterChange = (key: string, value: string) => {
+    const newFilters = { ...advancedFilters, [key]: value };
+    setAdvancedFilters(newFilters);
+  };
+  
+  // 应用高级筛选
+  const handleApplyAdvancedFilters = () => {
+    fetchReports(false, 1, searchTerm, searchType, advancedFilters);
+  };
+  
+  // 清除高级筛选
+  const handleClearAdvancedFilters = () => {
+    const defaultFilters = {
+      minCorrectnessScore: '',
+      minFluencyScore: '',
+      startDate: '',
+      endDate: '',
+      sortBy: 'assessment_date',
+      sortOrder: 'desc' as 'asc' | 'desc'
+    };
+    setAdvancedFilters(defaultFilters);
+    fetchReports(false, 1, searchTerm, searchType, defaultFilters);
   };
 
 
@@ -208,7 +272,7 @@ export default function WabReportList() {
             });
             
             // 刷新列表数据
-            fetchReports(true, pagination.page, searchTerm, searchType);
+            fetchReports(true, pagination.page, searchTerm, searchType, advancedFilters);
             
             // 延迟关闭进度窗口
             setTimeout(() => {
@@ -252,7 +316,7 @@ export default function WabReportList() {
   };
 
   const handlePageChange = (page: number) => {
-    fetchReports(false, page, searchTerm, searchType);
+    fetchReports(false, page, searchTerm, searchType, advancedFilters);
   };
 
   const getScoreColor = (score: number) => {
@@ -290,13 +354,15 @@ export default function WabReportList() {
       <div className="bg-white rounded-lg border border-gray-200 px-3 py-2">
         <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
           {/* 搜索类型选择 */}
-          <div className="relative min-w-[100px]">
+          <div className="relative min-w-[120px]">
             <select
               value={searchType}
-              onChange={(e) => setSearchType(e.target.value as 'name' | 'quiz_id')}
+              onChange={(e) => setSearchType(e.target.value as 'name' | 'phone' | 'user_id' | 'quiz_id')}
               className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white appearance-none"
             >
               <option value="name">姓名</option>
+              <option value="phone">手机号</option>
+              <option value="user_id">用户ID</option>
               <option value="quiz_id">试卷ID</option>
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -314,7 +380,12 @@ export default function WabReportList() {
               value={searchTerm}
               onChange={(e) => handleSearchInputChange(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder={searchType === 'name' ? '请输入评估人姓名' : '请输入试卷ID'}
+              placeholder={
+                searchType === 'name' ? '请输入评估人姓名' :
+                searchType === 'phone' ? '请输入手机号' :
+                searchType === 'user_id' ? '请输入用户ID' :
+                '请输入试卷ID'
+              }
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             />
             {searchTerm && (
@@ -330,6 +401,14 @@ export default function WabReportList() {
 
           {/* 操作按钮 */}
           <div className="flex gap-2 ml-auto">
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="inline-flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm transition-colors"
+              title="高级筛选"
+            >
+              <i className="fa-solid fa-filter mr-1"></i>
+              高级
+            </button>
         <button
               onClick={handleSearch}
               disabled={loading}
@@ -344,6 +423,109 @@ export default function WabReportList() {
           </div>
         </div>
       </div>
+
+      {/* 高级筛选面板 */}
+      {showAdvancedFilters && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 得分筛选 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">最低正确性得分</label>
+              <input
+                type="number"
+                min="0"
+                max="10"
+                step="0.1"
+                value={advancedFilters.minCorrectnessScore}
+                onChange={(e) => handleAdvancedFilterChange('minCorrectnessScore', e.target.value)}
+                placeholder="0.0-10.0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">最低流畅性得分</label>
+              <input
+                type="number"
+                min="0"
+                max="10"
+                step="0.1"
+                value={advancedFilters.minFluencyScore}
+                onChange={(e) => handleAdvancedFilterChange('minFluencyScore', e.target.value)}
+                placeholder="0.0-10.0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+            
+            {/* 时间范围筛选 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">开始时间</label>
+              <input
+                type="datetime-local"
+                value={advancedFilters.startDate}
+                onChange={(e) => handleAdvancedFilterChange('startDate', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">结束时间</label>
+              <input
+                type="datetime-local"
+                value={advancedFilters.endDate}
+                onChange={(e) => handleAdvancedFilterChange('endDate', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+            
+            {/* 排序选项 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">排序字段</label>
+              <select
+                value={advancedFilters.sortBy}
+                onChange={(e) => handleAdvancedFilterChange('sortBy', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                <option value="assessment_date">评估时间</option>
+                <option value="user_name">用户姓名</option>
+                <option value="correctness_total">正确性总分</option>
+                <option value="fluency_total">流畅性总分</option>
+                <option value="question_count">题目数量</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">排序方向</label>
+              <select
+                value={advancedFilters.sortOrder}
+                onChange={(e) => handleAdvancedFilterChange('sortOrder', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                <option value="desc">降序</option>
+                <option value="asc">升序</option>
+              </select>
+            </div>
+          </div>
+          
+          {/* 筛选操作按钮 */}
+          <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+            <button
+              onClick={handleApplyAdvancedFilters}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors"
+            >
+              <i className="fa-solid fa-check mr-1"></i>
+              应用筛选
+            </button>
+            <button
+              onClick={handleClearAdvancedFilters}
+              className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm transition-colors"
+            >
+              <i className="fa-solid fa-times mr-1"></i>
+              清除筛选
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 报告列表 */}
       <div className={cn(
@@ -619,7 +801,7 @@ export default function WabReportList() {
               </button>
               
               <button
-                onClick={() => fetchReports(true, pagination.page, searchTerm, searchType)}
+                onClick={() => fetchReports(true, pagination.page, searchTerm, searchType, advancedFilters)}
                 disabled={loading || pageChanging}
                 className="px-3 py-1 rounded text-sm bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 title={loading || pageChanging ? '加载中...' : '刷新列表'}

@@ -307,11 +307,22 @@ class AdminAPI {
   }
 
   /**
-   * 获取WAB报告列表
+   * 获取WAB报告列表 - 支持完整的筛选功能
    */
   async getWabReports(params?: {
     page?: number;
     per_page?: number;
+    user_id?: string;
+    quiz_id?: string;
+    real_name?: string;
+    phone?: string;
+    start_date?: string;
+    end_date?: string;
+    min_correctness_score?: number;
+    min_fluency_score?: number;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+    // 保留旧参数名以向后兼容
     evaluationType?: string;
     evaluatorName?: string;
     quizId?: string;
@@ -335,15 +346,49 @@ class AdminAPI {
         throw new Error('访问令牌已过期，请重新登录');
       }
 
-      // 构建查询参数 - 使用正确的后台API参数名称，优化请求
+      // 构建查询参数 - 使用API文档中的正确参数名称
       const queryParams = new URLSearchParams();
+      
+      // 分页参数
       if (params?.page) queryParams.append('page', params.page.toString());
-      // 使用较小的page_size以提高响应速度
-      const pageSize = params?.per_page || 10;
+      const pageSize = params?.per_page || 20; // 默认20条
       queryParams.append('page_size', pageSize.toString());
-      if (params?.startDate) queryParams.append('start_date', params.startDate);
-      if (params?.endDate) queryParams.append('end_date', params.endDate);
-      // 不传user_id参数，获取所有用户的报告
+      
+      // 用户筛选参数
+      if (params?.user_id) queryParams.append('user_id', params.user_id);
+      if (params?.real_name || params?.evaluatorName) {
+        queryParams.append('real_name', params.real_name || params.evaluatorName || '');
+      }
+      if (params?.phone) queryParams.append('phone', params.phone);
+      
+      // 试卷筛选参数
+      if (params?.quiz_id || params?.quizId) {
+        queryParams.append('quiz_id', params.quiz_id || params.quizId || '');
+      }
+      
+      // 时间范围筛选
+      if (params?.start_date || params?.startDate) {
+        queryParams.append('start_date', params.start_date || params.startDate || '');
+      }
+      if (params?.end_date || params?.endDate) {
+        queryParams.append('end_date', params.end_date || params.endDate || '');
+      }
+      
+      // 得分筛选参数
+      if (params?.min_correctness_score !== undefined) {
+        queryParams.append('min_correctness_score', params.min_correctness_score.toString());
+      }
+      if (params?.min_fluency_score !== undefined) {
+        queryParams.append('min_fluency_score', params.min_fluency_score.toString());
+      }
+      
+      // 排序参数
+      if (params?.sort_by) {
+        queryParams.append('sort_by', params.sort_by);
+      }
+      if (params?.sort_order) {
+        queryParams.append('sort_order', params.sort_order);
+      }
 
       // 使用正确的后台API端点
       const url = `${this.baseURL}/admin/reports/all?${queryParams.toString()}`;
