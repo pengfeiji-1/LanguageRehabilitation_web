@@ -19,6 +19,7 @@ export default function EvaluationDetailPage() {
   const [showDialogModal, setShowDialogModal] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionDetail | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [dialogCollapsed, setDialogCollapsed] = useState(false); // 对话弹窗的折叠状态
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   // 重评估相关状态
@@ -680,16 +681,16 @@ export default function EvaluationDetailPage() {
 
                       {/* 折叠按钮 */}
                       <button
-                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        onClick={() => setDialogCollapsed(!dialogCollapsed)}
                         className="text-indigo-600 hover:text-indigo-800 p-1 rounded transition-transform duration-200"
-                        title={isCollapsed ? "展开对话" : "折叠对话"}
+                        title={dialogCollapsed ? "展开对话" : "折叠对话"}
                       >
-                        <i className={`fa-solid ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'} text-sm`}></i>
+                        <i className={`fa-solid ${dialogCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'} text-sm`}></i>
                       </button>
                     </div>
                   </div>
                   
-                  {!isCollapsed && (
+                  {!dialogCollapsed && (
                     <div className="p-4 bg-gray-50">
                       {/* 聊天式对话界面 */}
                       {selectedQuestion.user_ai_interaction && selectedQuestion.user_ai_interaction.rounds && (
@@ -773,7 +774,7 @@ export default function EvaluationDetailPage() {
                   )}
 
                   {/* 折叠状态预览 */}
-                  {isCollapsed && (
+                  {dialogCollapsed && (
                     <div className="p-4 bg-gray-50 border-t">
                       <div className="flex items-center justify-center text-gray-500 text-sm">
                         <i className="fa-solid fa-comments mr-2"></i>
