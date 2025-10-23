@@ -620,36 +620,36 @@ export default function EvaluationDetailPage() {
             {/* 弹窗头部 */}
             <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
               <h2 className="text-xl font-semibold text-blue-800">对话详情</h2>
-              <button
-                onClick={() => setShowDialogModal(false)}
-                className="text-blue-600 hover:text-blue-800 transition-colors hover:bg-blue-100 rounded-full p-2"
-                title="关闭"
-              >
-                <i className="fa-solid fa-times text-xl"></i>
-              </button>
+              <div className="flex items-center space-x-3">
+                {/* 播放按钮 */}
+                {selectedQuestion.speaking_audio_info && (
+                  <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
+                )}
+                {/* 关闭按钮 */}
+                <button
+                  onClick={() => setShowDialogModal(false)}
+                  className="text-blue-600 hover:text-blue-800 transition-colors hover:bg-blue-100 rounded-full p-2"
+                  title="关闭"
+                >
+                  <i className="fa-solid fa-times text-xl"></i>
+                </button>
+              </div>
             </div>
             
             {/* 内容区域 */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-6 space-y-4">
                 {/* 题目和参考答案区域 */}
-                <div className="bg-blue-50 rounded-xl p-4 relative">
+                <div className="bg-blue-50 rounded-xl p-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <span className="text-blue-700 font-medium">题目：{selectedQuestion.question_content}</span>
                     </div>
                     
                     <div>
-                      <div className="text-gray-700 font-medium mb-2">参考答案：{selectedQuestion.correct_answer}</div>
+                      <div className="text-gray-700 font-medium">参考答案：{selectedQuestion.correct_answer}</div>
                     </div>
                   </div>
-                  
-                  {/* 播放按钮在右上角 */}
-                  {selectedQuestion.speaking_audio_info && (
-                    <div className="absolute top-4 right-4">
-                      <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
-                    </div>
-                  )}
                 </div>
 
                 {/* 对话内容 */}
@@ -829,3 +829,4 @@ export default function EvaluationDetailPage() {
     </div>
   );
 }
+
