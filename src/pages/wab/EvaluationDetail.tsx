@@ -631,13 +631,20 @@ export default function EvaluationDetailPage() {
             </div>
             
             <div className="p-6 space-y-4">
-              {/* 问题内容 */}
-              <div className="bg-blue-50 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-700 font-medium">题目：{selectedQuestion.question_content}</span>
-                  {selectedQuestion.speaking_audio_info && (
-                    <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
-                  )}
+              {/* 题目和参考答案在一行 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-blue-700 font-medium">题目：{selectedQuestion.question_content}</span>
+                    {selectedQuestion.speaking_audio_info && (
+                      <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
+                    )}
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="text-gray-700 font-medium mb-2">参考答案</div>
+                  <p className="text-gray-800">{selectedQuestion.correct_answer}</p>
                 </div>
               </div>
 
@@ -672,12 +679,6 @@ export default function EvaluationDetailPage() {
                   ))}
                 </div>
               )}
-
-              {/* 参考答案 */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <div className="text-gray-700 font-medium mb-2">参考答案</div>
-                <p className="text-gray-800">{selectedQuestion.correct_answer}</p>
-              </div>
 
             </div>
           </div>
