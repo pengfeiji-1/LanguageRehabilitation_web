@@ -320,9 +320,9 @@ export default function WabReportList() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 bg-green-50';
-    if (score >= 70) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    if (score >= 90) return 'text-green-600';
+    if (score >= 70) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   if (loading) {
@@ -370,56 +370,58 @@ export default function WabReportList() {
             </div>
           </div>
 
-          {/* 搜索输入框 */}
-          <div className="flex-1 max-w-md relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i className="fa-solid fa-search text-gray-400 text-sm"></i>
+          {/* 搜索输入框和按钮 */}
+          <div className="flex-1 flex gap-2 items-center">
+            <div className="flex-1 max-w-md relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i className="fa-solid fa-search text-gray-400 text-sm"></i>
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => handleSearchInputChange(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder={
+                  searchType === 'name' ? '请输入评估人姓名' :
+                  searchType === 'phone' ? '请输入手机号' :
+                  searchType === 'user_id' ? '请输入用户ID' :
+                  '请输入试卷ID'
+                }
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  title="清除搜索"
+                >
+                  <i className="fa-solid fa-times text-sm"></i>
+                </button>
+              )}
             </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => handleSearchInputChange(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder={
-                searchType === 'name' ? '请输入评估人姓名' :
-                searchType === 'phone' ? '请输入手机号' :
-                searchType === 'user_id' ? '请输入用户ID' :
-                '请输入试卷ID'
-              }
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            />
-            {searchTerm && (
-              <button
-                onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                title="清除搜索"
-              >
-                <i className="fa-solid fa-times text-sm"></i>
-              </button>
-            )}
-        </div>
 
-          {/* 操作按钮 */}
-          <div className="flex gap-2 ml-auto">
-            <button
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="inline-flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm transition-colors"
-              title="高级筛选"
-            >
-              <i className="fa-solid fa-filter mr-1"></i>
-              高级
-            </button>
-        <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm transition-colors"
-              title={loading ? '加载中...' : '搜索'}
-        >
-          <i className={cn(
-                "fa-solid",
-                loading ? 'fa-spinner fa-spin' : 'fa-search'
-          )}></i>
-        </button>
+            {/* 操作按钮 */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="inline-flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm transition-colors"
+                title="高级筛选"
+              >
+                <i className="fa-solid fa-filter mr-1"></i>
+                高级
+              </button>
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm transition-colors"
+                title={loading ? '加载中...' : '搜索'}
+              >
+                <i className={cn(
+                  "fa-solid",
+                  loading ? 'fa-spinner fa-spin' : 'fa-search'
+                )}></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -561,13 +563,13 @@ export default function WabReportList() {
                       {index + 1}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="text-sm font-medium text-gray-900">
                         {report.evaluationType}
                       </span>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex flex-col">
-                        <span className="font-medium">{report.evaluatorName}</span>
+                        <span className="text-sm font-medium">{report.evaluatorName}</span>
                         <span className="text-xs text-gray-500">ID: {report.evaluatorId}</span>
                       </div>
                     </td>
@@ -579,7 +581,7 @@ export default function WabReportList() {
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <span className={cn(
-                        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+                        "text-sm font-medium",
                         getScoreColor(report.totalScore)
                       )}>
                         {report.totalScore}分
@@ -597,7 +599,7 @@ export default function WabReportList() {
                     <td className="px-4 py-2 whitespace-nowrap text-center">
                       <Link
                         to={`/wab/evaluations/${report.evaluatorId}?quiz_id=${report.quizId}`}
-                        className="text-blue-600 hover:text-blue-900 transition-colors"
+                        className="text-blue-600 hover:text-blue-900 transition-colors text-sm"
                       >
                         查看详情
                       </Link>
@@ -607,10 +609,10 @@ export default function WabReportList() {
                         onClick={() => handleReevaluate(report)}
                         disabled={reevaluatingReports.has(report.id)}
                         className={cn(
-                          "inline-flex items-center px-2 py-1 rounded-md text-sm font-medium transition-colors",
+                          "inline-flex items-center px-2 py-1 text-sm font-medium transition-colors",
                           reevaluatingReports.has(report.id)
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : "bg-green-100 hover:bg-green-200 text-green-700"
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-green-700 hover:text-green-800"
                         )}
                       >
                         {reevaluatingReports.has(report.id) ? (
