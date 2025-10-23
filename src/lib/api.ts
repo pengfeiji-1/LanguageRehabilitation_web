@@ -314,6 +314,7 @@ class AdminAPI {
     per_page?: number;
     evaluationType?: string;
     evaluatorName?: string;
+    quizId?: string;
     startDate?: string;
     endDate?: string;
   }): Promise<WabReportsResponse> {

@@ -136,61 +136,121 @@ export default function AudioPlayer({ evaluationId, audioUrl, className, onError
 
   if (!evaluationId && !audioUrl) {
     return (
-      <div className={cn("flex items-center text-gray-400", className)}>
-        <i className="fa-solid fa-volume-xmark mr-1"></i>
-        <span className="text-sm">无音频</span>
+      <div className={cn("flex items-center justify-center w-full", className)}>
+        <div className="w-8 h-8 flex items-center justify-center">
+          <i className="fa-solid fa-volume-xmark text-gray-400 text-sm" title="无音频"></i>
+        </div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className={cn("flex items-center text-blue-600", className)}>
-        <i className="fa-solid fa-spinner fa-spin mr-1"></i>
-        <span className="text-sm">加载中...</span>
+      <div className={cn("flex items-center justify-center w-full", className)}>
+        <div className="w-8 h-8 flex items-center justify-center">
+          <i className="fa-solid fa-spinner fa-spin text-blue-500 text-sm" title="音频加载中..."></i>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={cn("flex items-center text-red-600", className)} title={error}>
-        <i className="fa-solid fa-exclamation-triangle mr-1"></i>
-        <span className="text-sm">
-          {error.includes('502') || error.includes('服务器') 
-            ? '服务异常' 
-            : error.includes('No audio') || error.includes('没有音频')
-            ? '无音频'
-            : '加载失败'}
-        </span>
+      <div className={cn("flex items-center justify-center w-full", className)} title={error}>
+        <div className="w-8 h-8 flex items-center justify-center">
+          <i className="fa-solid fa-exclamation-triangle text-red-500 text-sm"></i>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <button
-        onClick={togglePlay}
-        className="flex items-center justify-center w-8 h-8 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full transition-colors"
-        title={isPlaying ? "暂停" : "播放"}
-      >
-        <i className={`fa-solid ${isPlaying ? 'fa-pause' : 'fa-play'} text-sm`}></i>
-      </button>
-      
-      {duration > 0 && (
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs text-gray-500 whitespace-nowrap">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </span>
-          <div className="flex-1 bg-gray-200 rounded-full h-1 min-w-[60px]">
-            <div 
-              className="bg-blue-500 h-1 rounded-full transition-all"
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            />
-          </div>
+  // 如果没有音频加载或者时长为0，只显示播放按钮
+  if (duration === 0) {
+    return (
+      <div className={cn("flex items-center justify-center w-full", className)}>
+        <div className="w-8 h-8 flex items-center justify-center">
+          <button
+            onClick={togglePlay}
+            className="relative w-8 h-8 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full transition-colors"
+            title="播放音频"
+          >
+            <i className="fa-solid fa-play text-sm absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" style={{marginLeft: '1px', marginTop: '-1px'}}></i>
+          </button>
         </div>
-      )}
+        
+        <audio
+          ref={audioRef}
+          src={blobUrl || audioUrl}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={handleEnded}
+          preload="metadata"
+        />
+      </div>
+    );
+  }
 
+  // 计算进度百分比
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const circumference = 2 * Math.PI * 12; // 半径12的圆周长
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  
+  return (
+    <div className={cn("flex items-center justify-center w-full", className)}>
+      <div className="relative w-8 h-8 flex items-center justify-center">
+        {/* 背景圆圈 */}
+        <svg className="w-8 h-8 -rotate-90" viewBox="0 0 28 28">
+          <circle
+            cx="14"
+            cy="14"
+            r="12"
+            fill="none"
+            stroke="#e5e7eb"
+            strokeWidth="2"
+          />
+          {/* 进度圆圈 */}
+          <circle
+            cx="14"
+            cy="14"
+            r="12"
+            fill="none"
+            stroke={isPlaying ? "#ef4444" : "#3b82f6"}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-300"
+          />
+        </svg>
+        
+        {/* 中心内容 */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {isPlaying ? (
+            <>
+              <button
+                onClick={togglePlay}
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-500 hover:text-red-600 transition-colors"
+                title="暂停"
+                style={{marginTop: '-3px'}}
+              >
+                <i className="fa-solid fa-pause text-[10px]"></i>
+              </button>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[6px] text-gray-500 leading-none" style={{marginTop: '6px'}}>
+                {Math.ceil(duration - currentTime)}s
+              </div>
+            </>
+          ) : (
+            <button
+              onClick={togglePlay}
+              className="relative w-4 h-4 text-blue-600 hover:text-blue-800 transition-colors"
+              title="播放"
+            >
+              <i className="fa-solid fa-play text-[10px] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" style={{marginLeft: '0.5px', marginTop: '-0.5px'}}></i>
+            </button>
+          )}
+        </div>
+      </div>
+      
       <audio
         ref={audioRef}
         src={blobUrl || audioUrl}

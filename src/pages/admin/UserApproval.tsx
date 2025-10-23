@@ -223,66 +223,67 @@ export default function UserApproval() {
 
   // 渲染用户表格
   const renderUserTable = (users: User[]) => (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              用户信息
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              角色状态
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              注册时间
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              最后登录
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              操作
-            </th>
-          </tr>
-        </thead>
+    <div className="bg-white rounded-lg border border-gray-200 flex-1 flex flex-col">
+      <div className="overflow-x-auto flex-1 overflow-y-auto min-h-0">
+        <table className="w-full">
+          <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
+            <tr>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50">
+                用户信息
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50">
+                角色状态
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50">
+                注册时间
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50">
+                最后登录
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50">
+                操作
+              </th>
+            </tr>
+          </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {users.map((user) => (
             <tr key={user.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
+              <td className="px-4 py-2">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-10 w-10">
                     <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                       <i className="fa-solid fa-user text-blue-600"></i>
                     </div>
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <div className="text-sm font-medium text-gray-900">{user.real_name}</div>
-                    <div className="text-sm text-gray-500">{user.username}</div>
+                    <div className="text-xs text-gray-500">{user.username}</div>
                     {user.email && (
                       <div className="text-xs text-gray-400">{user.email}</div>
                     )}
                   </div>
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex flex-col space-y-1">
+              <td className="px-4 py-2">
+                <div className="flex flex-col space-y-0.5">
                   {renderStatusBadge(user.status, user.role)}
                   <span className="text-xs text-gray-500">
                     {PermissionManager.getRoleDisplayName(user.role)}
                   </span>
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-2 py-1 text-sm text-gray-500">
                 {new Date(user.created_at).toLocaleString('zh-CN')}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-2 py-1 text-sm text-gray-500">
                 {user.last_login 
                   ? new Date(user.last_login).toLocaleString('zh-CN')
                   : '从未登录'
                 }
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <td className="px-2 py-1 text-sm font-medium">
                 <div className="flex space-x-2">
-                  {user.role === 'viewer' && (user.status === 'pending' || user.status === 'inactive') && (
+                  {user.role === 'viewer' && (user.status === 'pending' || user.status === 'disabled') && (
                     <>
                       <button
                         onClick={() => {
@@ -314,13 +315,13 @@ export default function UserApproval() {
               </td>
             </tr>
           ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
       
       {users.length === 0 && (
-        <div className="text-center py-12">
-          <i className="fa-solid fa-users text-gray-400 text-4xl mb-4"></i>
-          <p className="text-gray-500">暂无用户数据</p>
+        <div className="text-center py-4">
+          <span className="text-sm text-gray-500">暂无数据</span>
         </div>
       )}
     </div>
@@ -336,73 +337,67 @@ export default function UserApproval() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* 页面标题 */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">用户审批管理</h1>
-        <p className="mt-2 text-gray-600">管理用户权限申请和角色分配</p>
-      </div>
-
+    <div className="h-full flex flex-col space-y-2">
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-6 shadow">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
                 <i className="fa-solid fa-clock text-yellow-600"></i>
               </div>
             </div>
-            <div className="ml-4">
+            <div className="ml-3">
               <p className="text-sm font-medium text-gray-500">待审批</p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-xl font-semibold text-gray-900">
                 {statistics?.pending_count ?? pendingUsers.length}
               </p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-6 shadow">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                 <i className="fa-solid fa-user-check text-green-600"></i>
               </div>
             </div>
-            <div className="ml-4">
+            <div className="ml-3">
               <p className="text-sm font-medium text-gray-500">今日通过</p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-xl font-semibold text-gray-900">
                 {statistics?.approved_today ?? 0}
               </p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-6 shadow">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                 <i className="fa-solid fa-user-times text-red-600"></i>
               </div>
             </div>
-            <div className="ml-4">
+            <div className="ml-3">
               <p className="text-sm font-medium text-gray-500">今日拒绝</p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-xl font-semibold text-gray-900">
                 {statistics?.rejected_today ?? 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 shadow">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                 <i className="fa-solid fa-users text-blue-600"></i>
               </div>
             </div>
-            <div className="ml-4">
+            <div className="ml-3">
               <p className="text-sm font-medium text-gray-500">今日注册</p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-xl font-semibold text-gray-900">
                 {statistics?.total_registered ?? 0}
               </p>
             </div>
@@ -411,8 +406,8 @@ export default function UserApproval() {
       </div>
 
       {/* 搜索栏 */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex items-center space-x-4">
+      <div className="bg-white rounded-lg border border-gray-200 px-3 py-2">
+        <div className="flex items-center space-x-3">
           <div className="flex-1">
             <div className="relative">
               <input
@@ -420,19 +415,19 @@ export default function UserApproval() {
                 placeholder="搜索用户名或姓名..."
                 value={searchKeyword}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i className="fa-solid fa-search text-gray-400"></i>
+                <i className="fa-solid fa-search text-gray-400 text-sm"></i>
               </div>
             </div>
           </div>
           <button
             onClick={fetchPendingData}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+            className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center text-sm"
           >
-            <i className={`fa-solid fa-refresh mr-2 ${loading ? 'fa-spin' : ''}`}></i>
+            <i className={`fa-solid fa-refresh mr-1 ${loading ? 'fa-spin' : ''}`}></i>
             刷新
           </button>
         </div>
@@ -451,7 +446,7 @@ export default function UserApproval() {
           >
             待审批用户
             {(statistics?.pending_count ?? pendingUsers.length) > 0 && (
-              <span className="ml-2 bg-red-100 text-red-600 py-1 px-2 rounded-full text-xs">
+              <span className="ml-3 bg-red-100 text-red-600 py-1 px-2 rounded-full text-xs">
                 {statistics?.pending_count ?? pendingUsers.length}
               </span>
             )}

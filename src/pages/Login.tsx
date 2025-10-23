@@ -179,24 +179,16 @@ export default function Login() {
   };
 
   return (
-    <div 
-      className="min-h-screen relative flex flex-col lg:block"
-      style={{ 
-        backgroundImage: 'url(/login_bg.jpeg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
-    >
+    <div className="min-h-screen relative flex flex-col lg:block login-bg">
       {/* 背景遮罩 */}
       <div className="absolute inset-0 bg-black bg-opacity-20"></div>
       
       {/* 顶部Logo - 响应式调整 */}
-      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 lg:top-3 lg:left-3 z-30">
+      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 lg:top-6 lg:left-6 z-30">
         <img 
           src="/logo.png" 
           alt="智能语翼" 
-          className="h-12 w-auto sm:h-16 md:h-20 lg:h-[120px]"
+          className="h-10 w-auto sm:h-14 md:h-16 lg:h-20 xl:h-24"
           style={{ 
             filter: 'hue-rotate(180deg) saturate(1.5) brightness(0.9)',
             mixBlendMode: 'normal'
@@ -250,26 +242,26 @@ export default function Login() {
         </div>
 
         {/* 移动端/平板：顶部标题 */}
-        <div className="lg:hidden pt-20 pb-8 px-4 text-white text-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">智能语翼管理平台</h1>
-          <p className="text-sm sm:text-base md:text-lg opacity-90">数据管理 / 评估分析 / 质量控制</p>
+        <div className="lg:hidden pt-16 sm:pt-20 pb-6 sm:pb-8 px-4 text-white text-center">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">智能语翼管理平台</h1>
+          <p className="text-sm sm:text-base opacity-90">数据管理 / 评估分析 / 质量控制</p>
         </div>
 
         {/* 登录区域 - 响应式布局 */}
-        <div className="flex-1 flex items-center justify-center px-4 pb-8 lg:items-start lg:justify-end lg:pt-20 lg:pr-8 xl:pr-32">
-          <div className="w-full max-w-md lg:max-w-lg xl:w-[28rem]">
-            <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6">
-              <div className="mb-4 sm:mb-5 text-center">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">欢迎来到智能语翼</h2>
+        <div className="flex-1 flex items-center justify-center px-4 py-4 sm:py-6 lg:items-start lg:justify-end lg:pt-20 lg:pr-8 xl:pr-32">
+          <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:w-[28rem]">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 lg:p-8">
+              <div className="mb-3 sm:mb-5 text-center">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">欢迎来到智能语翼</h2>
               </div>
               
               {/* 标签页头部 */}
-              <div className="mb-4 sm:mb-5">
+              <div className="mb-3 sm:mb-5">
                 <div className="flex bg-gray-50 rounded-lg p-1">
                   <button
                     onClick={() => setLoginType('account')}
                     className={cn(
-                      "flex-1 py-2 px-3 sm:px-4 text-center font-medium transition-colors rounded-md text-sm",
+                      "flex-1 py-2.5 px-2 sm:px-4 text-center font-medium transition-colors rounded-md text-sm",
                       loginType === 'account'
                         ? "text-blue-600 bg-white shadow-sm"
                         : "text-gray-600 hover:text-gray-800"
@@ -280,7 +272,7 @@ export default function Login() {
                   <button
                     onClick={() => setLoginType('phone')}
                     className={cn(
-                      "flex-1 py-2 px-3 sm:px-4 text-center font-medium transition-colors rounded-md text-sm",
+                      "flex-1 py-2.5 px-2 sm:px-4 text-center font-medium transition-colors rounded-md text-sm",
                       loginType === 'phone'
                         ? "text-blue-600 bg-white shadow-sm"
                         : "text-gray-600 hover:text-gray-800"
@@ -292,7 +284,7 @@ export default function Login() {
               </div>
 
               {/* 登录表单内容 */}
-              <div className="min-h-[200px] sm:min-h-[240px]">
+              <div className="min-h-[180px] sm:min-h-[200px] lg:min-h-[240px]">
                 {/* 账号登录表单 */}
                 {loginType === 'account' && (
                   <form onSubmit={handleAccountLogin} className="space-y-3 sm:space-y-4">
@@ -303,7 +295,7 @@ export default function Login() {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         required
-                        className="block w-full px-3 sm:px-4 h-10 sm:h-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
+                        className="login-input block w-full px-3 sm:px-4 h-11 sm:h-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm sm:text-base transition-all duration-200 bg-white"
                         placeholder="请输入账号名/账号ID"
                       />
                     </div>
@@ -314,7 +306,7 @@ export default function Login() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="block w-full px-3 sm:px-4 h-10 sm:h-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
+                        className="login-input block w-full px-3 sm:px-4 h-11 sm:h-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm sm:text-base transition-all duration-200 bg-white"
                         placeholder="请输入登录密码"
                       />
                     </div>
@@ -334,7 +326,7 @@ export default function Login() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full flex justify-center h-10 sm:h-12 items-center px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-400 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="login-button w-full flex justify-center h-11 sm:h-12 items-center px-4 border border-transparent rounded-lg shadow-sm text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {loading ? (
                         <>
@@ -364,7 +356,7 @@ export default function Login() {
                           <select
                             value={countryCode}
                             onChange={(e) => setCountryCode(e.target.value)}
-                            className="h-10 sm:h-12 pl-3 pr-8 border border-r-0 border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm bg-white appearance-none transition-colors duration-200"
+                            className="login-select h-11 sm:h-12 pl-3 pr-8 border border-r-0 border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm sm:text-base bg-white appearance-none transition-all duration-200"
                             style={{ backgroundImage: 'none' }}
                           >
                             <option value="+86">+86</option>
@@ -380,7 +372,7 @@ export default function Login() {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           required
-                          className="flex-1 h-10 sm:h-12 px-3 border border-gray-300 rounded-r-md focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
+                          className="flex-1 h-11 sm:h-12 px-3 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm sm:text-base transition-all duration-200 bg-white"
                           placeholder="请输入手机号"
                         />
                       </div>
@@ -394,7 +386,7 @@ export default function Login() {
                           value={verificationCode}
                           onChange={(e) => setVerificationCode(e.target.value)}
                           required
-                          className="flex-1 h-10 sm:h-12 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm transition-colors duration-200"
+                          className="flex-1 h-11 sm:h-12 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm sm:text-base transition-all duration-200 bg-white"
                           placeholder="请输入验证码"
                           maxLength={6}
                         />
@@ -402,7 +394,7 @@ export default function Login() {
                           type="button"
                           onClick={handleSendCode}
                           disabled={countdown > 0 || !phone}
-                          className="px-3 sm:px-4 h-10 sm:h-12 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                          className="px-3 sm:px-4 h-11 sm:h-12 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         >
                           {countdown > 0 ? `${countdown}s` : '获取验证码'}
                         </button>
@@ -425,7 +417,7 @@ export default function Login() {
                     <button
                       type="submit"
                       disabled={loading || !agreed}
-                      className="w-full flex justify-center h-10 sm:h-12 items-center px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-400 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="login-button w-full flex justify-center h-11 sm:h-12 items-center px-4 border border-transparent rounded-lg shadow-sm text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {loading ? (
                         <>
@@ -445,21 +437,21 @@ export default function Login() {
                 )}
 
                 {/* 其他登录方式 */}
-                <div className="mt-4 sm:mt-5">
-                  <div className="text-center text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">其他登录方式</div>
+                <div className="mt-3 sm:mt-5">
+                  <div className="text-center text-xs sm:text-sm text-gray-600 mb-2 sm:mb-4">其他登录方式</div>
                   <div className="flex justify-center">
-                    <button className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                      <i className="fa-brands fa-weixin text-green-600"></i>
+                    <button className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors shadow-sm">
+                      <i className="fa-brands fa-weixin text-green-600 text-lg"></i>
                     </button>
                   </div>
                 </div>
 
                 {/* 注册提示 */}
-                <div className="mt-4 sm:mt-5 text-center text-xs sm:text-sm text-gray-600">
+                <div className="mt-3 sm:mt-5 text-center text-xs sm:text-sm text-gray-600">
                   没有账号？
                   <button 
                     onClick={() => navigate('/register')}
-                    className="text-blue-600 hover:text-blue-500 ml-1 underline bg-transparent border-none cursor-pointer"
+                    className="text-blue-600 hover:text-blue-500 ml-1 underline bg-transparent border-none cursor-pointer transition-colors"
                   >
                     现在就注册
                   </button>

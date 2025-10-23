@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '@/lib/api';
 import { showError } from '@/lib/toast';
+import { cn } from '@/lib/utils';
 import { 
   AnnotationItem, 
   AnnotationListParams,
@@ -156,7 +157,7 @@ export default function AnnotationList() {
 
   // 获取状态标签样式
   const getStatusBadgeClass = (status: string) => {
-    const baseClass = "px-2 py-1 rounded-full text-xs font-medium";
+    const baseClass = "px-2.5 py-0.5 rounded-full text-xs font-medium";
     switch (status) {
       case 'PENDING':
         return `${baseClass} bg-orange-100 text-orange-700`;
@@ -211,27 +212,21 @@ export default function AnnotationList() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* 页面标题 */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">评估标注</h1>
-        <p className="mt-1 text-sm text-gray-500">管理和标注失语症评估结果</p>
-      </div>
-
+    <div className="h-full flex flex-col space-y-2">
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-6 shadow-sm border">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                <i className="fa-solid fa-clock text-orange-600"></i>
+              <div className="w-8 h-8 bg-orange-100 rounded flex items-center justify-center">
+                <i className="fa-solid fa-clock text-orange-600 text-base"></i>
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">待标注</p>
+            <div className="ml-2">
+              <p className="text-base font-medium text-gray-500">待标注</p>
               <p className="text-2xl font-semibold text-gray-900">
                 {globalStats.loading ? (
-                  <i className="fa-solid fa-spinner fa-spin text-lg text-gray-400"></i>
+                  <i className="fa-solid fa-spinner fa-spin text-base text-gray-400"></i>
                 ) : (
                   globalStats.pending
                 )}
@@ -240,18 +235,18 @@ export default function AnnotationList() {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-6 shadow-sm border">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <i className="fa-solid fa-check text-green-600"></i>
+              <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
+                <i className="fa-solid fa-check text-green-600 text-base"></i>
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">我已标注</p>
+            <div className="ml-2">
+              <p className="text-base font-medium text-gray-500">我已标注</p>
               <p className="text-2xl font-semibold text-gray-900">
                 {globalStats.loading ? (
-                  <i className="fa-solid fa-spinner fa-spin text-lg text-gray-400"></i>
+                  <i className="fa-solid fa-spinner fa-spin text-base text-gray-400"></i>
                 ) : (
                   globalStats.my_annotated
                 )}
@@ -260,18 +255,18 @@ export default function AnnotationList() {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-6 shadow-sm border">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <i className="fa-solid fa-users text-gray-600"></i>
+              <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                <i className="fa-solid fa-users text-gray-600 text-base"></i>
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">他人已标注</p>
+            <div className="ml-2">
+              <p className="text-base font-medium text-gray-500">他人已标注</p>
               <p className="text-2xl font-semibold text-gray-900">
                 {globalStats.loading ? (
-                  <i className="fa-solid fa-spinner fa-spin text-lg text-gray-400"></i>
+                  <i className="fa-solid fa-spinner fa-spin text-base text-gray-400"></i>
                 ) : (
                   globalStats.others_annotated
                 )}
@@ -280,18 +275,18 @@ export default function AnnotationList() {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-6 shadow-sm border">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                <i className="fa-solid fa-chart-bar text-purple-600"></i>
+              <div className="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
+                <i className="fa-solid fa-chart-bar text-purple-600 text-base"></i>
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">总评估数</p>
+            <div className="ml-2">
+              <p className="text-base font-medium text-gray-500">总评估数</p>
               <p className="text-2xl font-semibold text-gray-900">
                 {globalStats.loading ? (
-                  <i className="fa-solid fa-spinner fa-spin text-lg text-gray-400"></i>
+                  <i className="fa-solid fa-spinner fa-spin text-base text-gray-400"></i>
                 ) : (
                   globalStats.total_evaluations
                 )}
@@ -302,16 +297,14 @@ export default function AnnotationList() {
       </div>
 
       {/* 筛选栏 */}
-      <div className="bg-white rounded-lg shadow-sm border p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              状态筛选
-            </label>
+      <div className="bg-white rounded-lg border border-gray-200 px-3 py-2">
+        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+          {/* 状态筛选 */}
+          <div className="relative min-w-[120px]">
             <select
               value={filters.status_filter || ''}
               onChange={(e) => handleFilterChange('status_filter', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white appearance-none"
             >
               {STATUS_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
@@ -319,91 +312,88 @@ export default function AnnotationList() {
                 </option>
               ))}
             </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+              <i className="fa-solid fa-chevron-down text-gray-400 text-sm"></i>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              试卷ID
-            </label>
+          {/* 试卷ID */}
+          <div className="flex-1 max-w-[200px]">
             <input
               type="text"
               placeholder="输入试卷ID"
               value={filters.quiz_id || ''}
               onChange={(e) => handleFilterChange('quiz_id', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              用户ID
-            </label>
+          {/* 用户ID */}
+          <div className="flex-1 max-w-[200px]">
             <input
               type="text"
               placeholder="输入用户ID"
               value={filters.user_id || ''}
               onChange={(e) => handleFilterChange('user_id', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             />
           </div>
 
-          <div className="flex items-end">
+          {/* 操作按钮 */}
+          <div className="flex gap-2 ml-auto">
             <button
               onClick={() => {
                 const resetFilters = { page: 1, page_size: ITEMS_PER_PAGE };
                 setFilters(resetFilters);
                 fetchAnnotations(resetFilters);
               }}
-              className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-medium transition-colors"
+              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm transition-colors"
+              title="重置筛选条件"
             >
-              重置筛选
+              <i className="fa-solid fa-rotate-left"></i>
             </button>
           </div>
         </div>
       </div>
 
       {/* 标注列表 */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-white rounded-t-lg border-t border-l border-r border-gray-200 flex-1 flex flex-col">
         {error ? (
-          <div className="p-8 text-center">
-            <i className="fa-solid fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">加载失败</h3>
-            <p className="text-gray-500 mb-4">{error}</p>
+          <div className="p-4 text-center">
+            <p className="text-sm text-gray-500 mb-2">{error}</p>
             <button
               onClick={() => fetchAnnotations()}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
+              className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs transition-colors"
             >
               重试
             </button>
           </div>
         ) : items.length === 0 ? (
-          <div className="p-8 text-center">
-            <i className="fa-solid fa-inbox text-4xl text-gray-300 mb-4"></i>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">暂无标注记录</h3>
-            <p className="text-gray-500">当前筛选条件下没有找到标注记录</p>
+          <div className="p-4 text-center">
+            <span className="text-sm text-gray-500">暂无数据</span>
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
+              <table className="w-full">
+                <thead className="sticky top-0 z-10 bg-gray-50 shadow-sm">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 sticky top-0">
                       评估ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 sticky top-0">
                       用户信息
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 sticky top-0">
                       题目信息
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 sticky top-0">
                       创建时间
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 sticky top-0">
                       标注状态
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 sticky top-0">
                       操作
                     </th>
                   </tr>
@@ -411,25 +401,25 @@ export default function AnnotationList() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {items.map((item) => (
                     <tr key={item.evaluation_id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-4 py-2 text-sm font-medium text-gray-900">
                         #{item.evaluation_id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-2 text-sm text-gray-900">
                         <div>
                           <div className="font-medium">{item.user_name}</div>
                           <div className="text-gray-500 text-xs">ID: {item.user_id}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-2 text-sm text-gray-900">
                         <div>
                           <div className="font-medium">{item.question_id}</div>
                           <div className="text-gray-500 text-xs">试卷: {item.quiz_id}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-4 py-2 text-sm text-gray-500">
                         {formatTime(item.created_time)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-2 text-sm">
                         <span className={getStatusBadgeClass(item.annotation_status)}>
                           {getStatusText(item.annotation_status)}
                         </span>
@@ -439,10 +429,10 @@ export default function AnnotationList() {
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-4 py-2 text-sm font-medium">
                         <button
                           onClick={() => handleOpenAnnotation(item.evaluation_id)}
-                          className="text-blue-600 hover:text-blue-900 transition-colors font-medium"
+                          className="text-blue-600 hover:text-blue-900 transition-colors"
                         >
                           {item.annotation_status === 'PENDING' ? '开始标注' : '查看详情'}
                         </button>
@@ -453,89 +443,191 @@ export default function AnnotationList() {
               </table>
             </div>
 
-            {/* 分页组件 */}
-            {pagination.pages > 1 && (
-              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
-                <div className="flex-1 flex justify-between sm:hidden">
-                  <button
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                    disabled={pagination.page <= 1}
-                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    上一页
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                    disabled={pagination.page >= pagination.pages}
-                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    下一页
-                  </button>
-                </div>
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      显示第 <span className="font-medium">{((pagination.page - 1) * ITEMS_PER_PAGE) + 1}</span> 到{' '}
-                      <span className="font-medium">{Math.min(pagination.page * ITEMS_PER_PAGE, pagination.total)}</span> 条，
-                      共 <span className="font-medium">{pagination.total}</span> 条记录
-                    </p>
-                  </div>
-                  <div>
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                      <button
-                        onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={pagination.page <= 1}
-                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <i className="fa-solid fa-chevron-left"></i>
-                      </button>
-                      
-                      {Array.from({ length: Math.min(pagination.pages, 7) }, (_, i) => {
-                        let pageNum;
-                        if (pagination.pages <= 7) {
-                          pageNum = i + 1;
-                        } else if (pagination.page <= 4) {
-                          pageNum = i + 1;
-                        } else if (pagination.page >= pagination.pages - 3) {
-                          pageNum = pagination.pages - 6 + i;
-                        } else {
-                          pageNum = pagination.page - 3 + i;
-                        }
-                        
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => handlePageChange(pageNum)}
-                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                              pageNum === pagination.page
-                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                      
-                      <button
-                        onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={pagination.page >= pagination.pages}
-                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <i className="fa-solid fa-chevron-right"></i>
-                      </button>
-                    </nav>
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         )}
       </div>
+      {/* 分页控件 */}
+      {!error && !loading && pagination.pages > 1 && (
+        <div className="bg-white border-t-0 border-l border-r border-b border-gray-200 rounded-b-lg -mt-2">
+          <div className="px-4 py-1 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              共 {pagination.total} 条
+            </div>
+            <div className="flex space-x-1">
+              <button
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page === 1 || loading}
+                className="px-3 py-1 rounded text-sm bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                &lt;
+              </button>
+              
+              {(() => {
+                const pages = [];
+                const totalPages = pagination.pages;
+                const current = pagination.page;
+                
+                if (totalPages <= 7) {
+                  // 总页数 <= 7，显示所有页码
+                  for (let i = 1; i <= totalPages; i++) {
+                    pages.push(
+                      <button
+                        key={i}
+                        onClick={() => handlePageChange(i)}
+                        disabled={loading}
+                        className={cn(
+                          "px-3 py-1 rounded text-sm transition-colors bg-white hover:bg-gray-50",
+                          current === i 
+                            ? 'text-blue-600 font-semibold' 
+                            : 'text-gray-700',
+                          loading && 'opacity-50 cursor-not-allowed'
+                        )}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+                } else {
+                  // 总页数 > 7，智能显示
+                  
+                  // 第1页
+                  pages.push(
+                    <button
+                      key={1}
+                      onClick={() => handlePageChange(1)}
+                      disabled={loading}
+                      className={cn(
+                        "px-3 py-1 rounded text-sm transition-colors bg-white hover:bg-gray-50",
+                        current === 1 
+                          ? 'text-blue-600 font-semibold' 
+                          : 'text-gray-700',
+                        loading && 'opacity-50 cursor-not-allowed'
+                      )}
+                    >
+                      1
+                    </button>
+                  );
+                  
+                  if (current <= 4) {
+                    // 当前页在前面：1 2 3 4 5 ... 最后页
+                    for (let i = 2; i <= Math.min(5, totalPages - 1); i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => handlePageChange(i)}
+                          disabled={loading}
+                          className={cn(
+                            "px-3 py-1 rounded text-sm transition-colors bg-white hover:bg-gray-50",
+                            current === i 
+                              ? 'text-blue-600 font-semibold' 
+                              : 'text-gray-700',
+                            loading && 'opacity-50 cursor-not-allowed'
+                          )}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                    if (totalPages > 6) {
+                      pages.push(<span key="ellipsis1" className="px-2 py-2 text-sm text-gray-400">...</span>);
+                    }
+                  } else if (current >= totalPages - 3) {
+                    // 当前页在后面：1 ... 倒数第4页 倒数第3页 倒数第2页 倒数第1页 最后页
+                    if (totalPages > 6) {
+                      pages.push(<span key="ellipsis1" className="px-2 py-2 text-sm text-gray-400">...</span>);
+                    }
+                    for (let i = Math.max(2, totalPages - 4); i <= totalPages - 1; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => handlePageChange(i)}
+                          disabled={loading}
+                          className={cn(
+                            "px-3 py-1 rounded text-sm transition-colors bg-white hover:bg-gray-50",
+                            current === i 
+                              ? 'text-blue-600 font-semibold' 
+                              : 'text-gray-700',
+                            loading && 'opacity-50 cursor-not-allowed'
+                          )}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                  } else {
+                    // 当前页在中间：1 ... 前页 当前页 后页 ... 最后页
+                    pages.push(<span key="ellipsis1" className="px-2 py-2 text-sm text-gray-400">...</span>);
+                    
+                    for (let i = current - 1; i <= current + 1; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => handlePageChange(i)}
+                          disabled={loading}
+                          className={cn(
+                            "px-3 py-1 rounded text-sm transition-colors bg-white hover:bg-gray-50",
+                            current === i 
+                              ? 'text-blue-600 font-semibold' 
+                              : 'text-gray-700',
+                            loading && 'opacity-50 cursor-not-allowed'
+                          )}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                    
+                    pages.push(<span key="ellipsis2" className="px-2 py-2 text-sm text-gray-400">...</span>);
+                  }
+                  
+                  // 最后一页
+                  if (totalPages > 1) {
+                    pages.push(
+                      <button
+                        key={totalPages}
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={loading}
+                        className={cn(
+                          "px-3 py-1 rounded text-sm transition-colors bg-white hover:bg-gray-50",
+                          current === totalPages 
+                            ? 'text-blue-600 font-semibold' 
+                            : 'text-gray-700',
+                          loading && 'opacity-50 cursor-not-allowed'
+                        )}
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+                }
+                
+                return pages;
+              })()}
+              
+              <button
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page === pagination.pages || loading}
+                className="px-3 py-1 rounded text-sm bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                &gt;
+              </button>
+              
+              <button
+                onClick={() => fetchAnnotations()}
+                disabled={loading}
+                className="px-3 py-1 rounded text-sm bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title={loading ? '加载中...' : '刷新列表'}
+              >
+                <i className={`fa-solid ${loading ? 'fa-spinner fa-spin' : 'fa-refresh'}`}></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 加载指示器 */}
       {loading && items.length > 0 && (
-        <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg">
           <i className="fa-solid fa-spinner fa-spin mr-2"></i>
           更新中...
         </div>
@@ -550,6 +642,7 @@ export default function AnnotationList() {
           onAnnotationUpdate={handleAnnotationUpdate}
         />
       )}
+
     </div>
   );
 }

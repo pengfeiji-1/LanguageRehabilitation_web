@@ -1,0 +1,28 @@
+{
+  "watch": [
+    "src",
+    "public",
+    "index.html",
+    "vite.config.ts",
+    "tailwind.config.js",
+    "postcss.config.js"
+  ],
+  "ext": "ts,tsx,js,jsx,css,html,json",
+  "ignore": [
+    "node_modules",
+    "dist",
+    "build",
+    "*.log",
+    ".git"
+  ],
+  "delay": "2000",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "events": {
+    "restart": "echo '🔄 服务器重启中...'",
+    "crash": "echo '❌ 服务器崩溃，正在重启...'",
+    "start": "echo '🚀 开发服务器启动成功！'"
+  },
+  "verbose": false
+}

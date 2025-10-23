@@ -45,41 +45,40 @@ export default function UserDetail() {
   };
   
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col space-y-2">
       {/* 页面标题和返回按钮 */}
-      <div className="flex items-center justify-between">
+      <div className="bg-white rounded-lg border border-gray-200 px-3 py-2 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">用户详情</h1>
-          <p className="mt-1 text-sm text-gray-500">查看和管理用户的详细信息</p>
+          <h1 className="text-xl font-bold text-gray-900">用户详情</h1>
         </div>
         <Link
           to="/users/list"
-          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-base font-medium text-gray-700 bg-white hover:bg-gray-50"
         >
           <i className="fa-solid fa-arrow-left mr-2"></i> 返回列表
         </Link>
       </div>
       
       {/* 用户基本信息卡片 */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
-        <div className="p-6">
+      <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
+        <div className="p-3">
           <div className="flex flex-col md:flex-row md:items-center">
             <div className="flex-shrink-0">
               <div className="h-24 w-24 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-4xl">
                 <i className="fa-solid fa-user"></i>
               </div>
             </div>
-            <div className="mt-6 md:mt-0 md:ml-8">
-              <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
-              <div className="mt-2 flex flex-wrap items-center text-sm text-gray-500">
-                <span className="flex items-center mr-6">
-                  <i className="fa-solid fa-envelope mr-1"></i> {user.email}
+            <div className="mt-2 md:mt-0 md:ml-4">
+              <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
+              <div className="mt-1 flex flex-wrap items-center text-base text-gray-500">
+                <span className="flex items-center mr-4">
+                  <i className="fa-solid fa-envelope mr-2 text-sm"></i> {user.email}
                 </span>
-                <span className="flex items-center mr-6">
-                  <i className="fa-solid fa-phone mr-1"></i> {user.phone}
+                <span className="flex items-center mr-4">
+                  <i className="fa-solid fa-phone mr-2 text-sm"></i> {user.phone}
                 </span>
                 <span className={cn(
-                  "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+                  "inline-flex items-center px-1 py-0.5 rounded text-sm font-medium",
                   user.gender === 'male' ? "bg-blue-100 text-blue-800" : 
                   user.gender === 'female' ? "bg-pink-100 text-pink-800" : 
                   "bg-gray-100 text-gray-800"
@@ -92,27 +91,27 @@ export default function UserDetail() {
         </div>
         
         <div className="border-t border-gray-200 bg-gray-50">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-3">
             <div>
               <h3 className="text-sm font-medium text-gray-500">注册时间</h3>
-              <p className="mt-1 text-base text-gray-900">{formatDate(user.registerTime)}</p>
+              <p className="mt-0.5 text-base text-gray-900">{formatDate(user.registerTime)}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">最近活跃</h3>
-              <p className="mt-1 text-base text-gray-900">{formatDate(user.lastActiveTime)}</p>
+              <p className="mt-0.5 text-base text-gray-900">{formatDate(user.lastActiveTime)}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">训练记录</h3>
-              <p className="mt-1 text-base text-gray-900">{user.trainingRecords.length} 条</p>
+              <p className="mt-0.5 text-base text-gray-900">{user.trainingRecords.length} 条</p>
             </div>
           </div>
         </div>
       </div>
       
       {/* 标签页 */}
-      <div>
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+      <div className="flex-1 flex flex-col">
+        <div className="border-b border-gray-200 bg-white rounded-lg border border-gray-200 px-2">
+          <nav className="-mb-px flex space-x-4">
             <button
               onClick={() => setActiveTab('records')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -128,16 +127,16 @@ export default function UserDetail() {
         
         {/* 训练记录列表 */}
         {activeTab === 'records' && (
-          <div className="mt-6 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+          <div className="bg-white rounded-lg overflow-hidden border border-gray-200 flex-1 flex flex-col">
+            <div className="overflow-x-auto flex-1 overflow-y-auto min-h-0">
+              <table className="w-full">
+                <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时长</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">得分</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">题目数</th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                    <th scope="col" className="px-3 py-2 text-left text-base font-medium text-gray-500 bg-gray-50">日期</th>
+                    <th scope="col" className="px-3 py-2 text-left text-base font-medium text-gray-500 bg-gray-50">时长</th>
+                    <th scope="col" className="px-3 py-2 text-left text-base font-medium text-gray-500 bg-gray-50">得分</th>
+                    <th scope="col" className="px-3 py-2 text-left text-base font-medium text-gray-500 bg-gray-50">题目数</th>
+                    <th scope="col" className="px-3 py-2 text-right text-base font-medium text-gray-500 bg-gray-50">操作</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -146,14 +145,14 @@ export default function UserDetail() {
                       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // 按日期倒序
                       .map((record) => (
                         <tr key={record.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-3 py-2 whitespace-nowrap text-base text-gray-900">
                             {formatDate(record.date)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-3 py-2 whitespace-nowrap text-base text-gray-500">
                             {Math.floor(record.duration / 60)}分{record.duration % 60}秒
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-sm leading-5 font-semibold rounded-full ${
                               record.score >= 90 ? 'bg-green-100 text-green-800' :
                               record.score >= 70 ? 'bg-yellow-100 text-yellow-800' :
                               'bg-red-100 text-red-800'
@@ -161,10 +160,10 @@ export default function UserDetail() {
                               {record.score}分
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-3 py-2 whitespace-nowrap text-base text-gray-500">
                             {record.questions.length}题
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <td className="px-3 py-2 whitespace-nowrap text-right text-base font-medium">
                             <Link
                               to={`/users/playback/${user.id}?record=${record.id}`}
                               className="text-blue-600 hover:text-blue-900"
@@ -176,7 +175,7 @@ export default function UserDetail() {
                       ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">
+                      <td colSpan={5} className="px-6 py-10 text-center text-base text-gray-500">
                         <div className="flex flex-col items-center">
                           <i className="fa-solid fa-clipboard-list text-2xl mb-2 text-gray-300"></i>
                           暂无训练记录

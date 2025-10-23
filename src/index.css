@@ -70,3 +70,103 @@
 .table tbody tr:hover {
   background-color: #f7f8fa;
 }
+
+/* 登录页面背景样式 - 针对不同浏览器优化 */
+.login-bg {
+  background-image: url('/login_bg.jpeg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  /* 针对移动端和某些浏览器的兼容性 */
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+}
+
+/* 针对移动设备优化背景图片 */
+@media (max-width: 768px) {
+  .login-bg {
+    background-attachment: scroll;
+    min-height: 100vh;
+    min-height: 100dvh; /* 针对移动端浏览器的动态视口高度 */
+  }
+}
+
+/* 针对小屏幕设备的额外优化 */
+@media (max-width: 480px) {
+  .login-bg {
+    background-size: cover;
+    background-position: center top;
+  }
+}
+
+/* 针对高分辨率屏幕的优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .login-bg {
+    background-image: url('/login_bg.jpeg');
+  }
+}
+
+/* 表单输入框的浏览器兼容性样式 */
+.login-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+}
+
+/* 选择框的样式优化 */
+select.login-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+
+/* 按钮的浏览器兼容性 */
+.login-button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: none;
+  outline: none;
+}
+
+/* 针对Safari和Chrome的输入框focus状态优化 */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+/* 禁用iOS Safari的默认样式 */
+input[type="text"],
+input[type="password"],
+input[type="tel"],
+select {
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;
+  border-radius: 0.5rem;
+}
+
+/* 确保在所有浏览器中文本清晰 */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 修复某些浏览器中的布局问题 */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* 修复弹窗显示时表头遮挡问题 - 禁用sticky定位 */
+body.modal-open thead[class*="sticky"],
+body.modal-open th[class*="sticky"] {
+  position: static !important;
+}

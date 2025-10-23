@@ -387,14 +387,14 @@ export default function EvaluationDetailPage() {
               onClick={fetchEvaluationDetail}
               className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
             >
-              <i className="fa-solid fa-refresh mr-2"></i>
+              <i className="fa-solid fa-refresh mr-3"></i>
               重试加载
             </button>
             <Link
               to="/wab/reports"
               className="inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
             >
-              <i className="fa-solid fa-arrow-left mr-2"></i>
+              <i className="fa-solid fa-arrow-left mr-3"></i>
               返回列表
             </Link>
           </div>
@@ -426,44 +426,42 @@ export default function EvaluationDetailPage() {
   const questionTableData = getQuestionTableData();
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-full space-y-5">
-        
+    <div className="h-full flex flex-col space-y-2">
         {/* 顶部返回按钮 */}
-        <div className="flex items-center justify-between mb-4 px-5">
+        <div className="pb-1">
           <Link
             to="/wab/reports"
-            className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="inline-flex items-center px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors text-sm"
           >
-            <i className="fa-solid fa-arrow-left text-xl mr-2"></i>
-            <span className="font-medium">返回列表</span>
+            <i className="fa-solid fa-arrow-left text-sm mr-2"></i>
+            <span>返回列表</span>
           </Link>
         </div>
 
         {/* 用户信息卡片 */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mx-5">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <div className="grid grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-gray-500 text-sm mb-1">评估人</div>
-              <div className="text-gray-900 font-medium">
+              <div className="text-gray-900 text-base font-medium">
                 {evaluationData.basic_info?.username || '未知用户'}
               </div>
             </div>
             <div>
               <div className="text-gray-500 text-sm mb-1">年龄</div>
-              <div className="text-gray-900 font-medium">
+              <div className="text-gray-900 text-base font-medium">
                 {evaluationData.basic_info?.age || '-'}
               </div>
             </div>
             <div>
               <div className="text-gray-500 text-sm mb-1">失语类型</div>
-              <div className="text-gray-900 font-medium">
+              <div className="text-gray-900 text-base font-medium">
                 {evaluationData.basic_info?.aphasia_type || '-'}
               </div>
             </div>
             <div>
               <div className="text-gray-500 text-sm mb-1">总时长</div>
-              <div className="text-gray-900 font-medium">
+              <div className="text-gray-900 text-base font-medium">
                 {evaluationData.basic_info?.total_time ? `${evaluationData.basic_info.total_time}秒` : '-'}
               </div>
             </div>
@@ -472,20 +470,20 @@ export default function EvaluationDetailPage() {
 
 
         {/* 问题表格 - 可折叠 */}
-        <div className="bg-white shadow-sm overflow-hidden">
+        <div className="bg-white overflow-hidden border border-gray-200 rounded-lg flex-1 flex flex-col">
           <div 
-            className="px-6 py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+            className="px-3 py-2 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">评估题目详情</h3>
-              <div className="flex items-center space-x-4">
+              <h3 className="text-base font-semibold text-gray-900">评估题目详情</h3>
+              <div className="flex items-center space-x-2">
                 <div className="text-sm text-gray-600">
-                  <span className="mr-4">正确率: <span className="font-medium text-blue-600">{correctnessPercent}%</span></span>
+                  <span className="mr-3">正确率: <span className="font-medium text-blue-600">{correctnessPercent}%</span></span>
                   <span>流畅度: <span className="font-medium text-green-600">{fluencyAverage}</span></span>
                 </div>
                 <i className={cn(
-                  "fa-solid text-sm transition-transform",
+                  "fa-solid text-base transition-transform",
                   isCollapsed ? "fa-chevron-down" : "fa-chevron-up"
                 )}></i>
               </div>
@@ -493,99 +491,106 @@ export default function EvaluationDetailPage() {
           </div>
           
           {!isCollapsed && (
-            <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-center font-medium text-sm w-16">序号</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">题型</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[200px]">题目内容</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[150px]">参考答案</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">对话结果</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm w-16">音频</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm w-20">用时</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[120px]">流畅度</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[100px]">正确性得分</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[100px]">流畅度得分</th>
-                  <th className="px-6 py-4 text-center font-medium text-sm min-w-[100px]">重评估</th>
-                </tr>
-              </thead>
-              <tbody>
+            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                  <tr>
+                    <th className="px-3 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 w-12">序号</th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 w-24">题型</th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 min-w-[200px]">题目内容</th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold text-gray-700 bg-gray-50 min-w-[150px]">参考答案</th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 w-20">对话</th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 w-16">音频</th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 w-16">用时</th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 w-20">流畅度</th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 w-20">正确性</th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 w-20">流畅度</th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 w-20">操作</th>
+                  </tr>
+                </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
                 {questionTableData.map((question) => (
-                  <tr key={question.id} className="border-t border-gray-100 hover:bg-gray-50">
-                    <td className="px-6 py-5 text-center text-sm text-gray-600">
+                  <tr key={question.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 py-2 text-sm font-medium text-gray-900">
                       {question.sequence}
                     </td>
-                    <td className="px-6 py-5 text-center text-sm text-gray-600">
+                    <td className="px-3 py-2 text-sm text-gray-600">
                       {question.type}
                     </td>
-                    <td className="px-6 py-5 text-sm text-gray-900">
-                      <div className="max-w-[250px] truncate" title={question.content}>
+                    <td className="px-3 py-2 text-sm text-gray-900">
+                      <div className="max-w-[200px] truncate" title={question.content}>
                         {question.content}
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-sm text-gray-900">
-                      <div className="max-w-[200px] truncate" title={question.referenceAnswer}>
+                    <td className="px-3 py-2 text-sm text-gray-900">
+                      <div className="max-w-[150px] truncate" title={question.referenceAnswer}>
                         {question.referenceAnswer}
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-center">
+                    <td className="px-3 py-2 text-center">
                       <button 
                         onClick={() => handleViewDialog(question.questionDetail)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors underline"
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                       >
-                        查看详情
+                        查看
                       </button>
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      {question.questionDetail.speaking_audio_info?.has_audio ? (
+                    <td className="px-3 py-2 text-center">
+                      {question.questionDetail.speaking_audio_info ? (
                         <AudioPlayer evaluationId={question.questionDetail.speaking_audio_info.evaluation_id} />
                       ) : (
                         <span className="text-gray-400 text-sm">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-5 text-center text-sm text-gray-600">
-                      {question.duration}
+                    <td className="px-3 py-2 text-center text-sm text-gray-600">
+                      {question.duration}s
                     </td>
-                    <td className="px-6 py-5 text-center">
+                    <td className="px-3 py-2 text-center">
                       <button 
                         onClick={() => handleViewDimensions(question.questionDetail)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors underline"
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                       >
-                        查看详情
+                        查看
                       </button>
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+                    <td className="px-3 py-2 text-center">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        parseFloat(question.correctnessScore) === 1 
+                          ? 'bg-green-100 text-green-800' 
+                          : parseFloat(question.correctnessScore) === 0
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
                         {parseFloat(question.correctnessScore)}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full">
+                    <td className="px-3 py-2 text-center">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        parseFloat(question.fluencyScore) >= 8 
+                          ? 'bg-green-100 text-green-800' 
+                          : parseFloat(question.fluencyScore) >= 5
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
                         {parseFloat(question.fluencyScore)}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-center">
+                    <td className="px-3 py-2 text-center">
                       <button 
                         onClick={() => handleQuestionReevaluate(question.questionDetail)}
                         disabled={reevaluatingQuestions.has(question.questionDetail.question_id)}
                         className={cn(
-                          "inline-flex items-center px-3 py-1 rounded-md text-sm font-medium transition-colors",
+                          "p-1 rounded text-sm transition-colors",
                           reevaluatingQuestions.has(question.questionDetail.question_id)
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            ? "text-gray-400 cursor-not-allowed"
                             : "text-green-600 hover:text-green-800 hover:bg-green-50"
                         )}
+                        title="重新评估"
                       >
                         {reevaluatingQuestions.has(question.questionDetail.question_id) ? (
-                          <>
-                            <i className="fa-solid fa-spinner fa-spin mr-1"></i>
-                            评估中
-                          </>
+                          <i className="fa-solid fa-spinner fa-spin"></i>
                         ) : (
-                          <>
-                            <i className="fa-solid fa-refresh mr-1"></i>
-                            重评估
-                          </>
+                          <i className="fa-solid fa-refresh"></i>
                         )}
                       </button>
                     </td>
@@ -596,18 +601,18 @@ export default function EvaluationDetailPage() {
             </div>
           )}
         </div>
-      </div>
 
       {/* 对话结果弹窗 */}
       {showDialogModal && selectedQuestion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100">
+            <div className="p-6 border-b border-gray-100 sticky top-0 bg-white z-20 shadow-sm">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold text-gray-900">对话结果</h3>
                 <button
                   onClick={() => setShowDialogModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-100 rounded-full p-3"
+                  title="关闭"
                 >
                   <i className="fa-solid fa-times text-xl"></i>
                 </button>
@@ -619,7 +624,7 @@ export default function EvaluationDetailPage() {
               <div className="bg-blue-50 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-blue-700 font-medium">问题内容</span>
-                  {selectedQuestion.speaking_audio_info?.has_audio && (
+                  {selectedQuestion.speaking_audio_info && (
                     <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
                   )}
                 </div>
@@ -633,7 +638,7 @@ export default function EvaluationDetailPage() {
                   {selectedQuestion.user_ai_interaction.rounds.map((round, index) => (
                     <div key={index} className="border border-gray-200 rounded-xl p-4">
                       <div className="flex items-center mb-2">
-                        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold mr-2">
+                        <span className="bg-blue-500 text-white px-3 py-2 rounded-full text-xs font-bold mr-3">
                           第{round.round}轮
                         </span>
                         <span className="text-sm text-gray-500">
@@ -704,10 +709,6 @@ export default function EvaluationDetailPage() {
                     <span className="ml-2 font-medium">{selectedQuestion.answer_time}秒</span>
                   </div>
                   <div>
-                    <span className="text-gray-600">回答耗时:</span>
-                    <span className="ml-2 font-medium">{selectedQuestion.user_answer_time_spent}秒</span>
-                  </div>
-                  <div>
                     <span className="text-gray-600">提交时间:</span>
                     <span className="ml-2 font-medium">{new Date(selectedQuestion.submit_time * 1000).toLocaleString()}</span>
                   </div>
@@ -726,12 +727,13 @@ export default function EvaluationDetailPage() {
       {showDimensionsModal && selectedQuestion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100">
+            <div className="p-6 border-b border-gray-100 sticky top-0 bg-white z-20 shadow-sm">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold text-gray-900">评估维度详细分析</h3>
                 <button
                   onClick={() => setShowDimensionsModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-100 rounded-full p-3"
+                  title="关闭"
                 >
                   <i className="fa-solid fa-times text-xl"></i>
                 </button>
@@ -808,7 +810,6 @@ export default function EvaluationDetailPage() {
         title="单题重新评估进度"
         taskType="question"
       />
-
     </div>
   );
 }

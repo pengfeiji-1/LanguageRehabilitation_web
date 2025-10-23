@@ -47,7 +47,7 @@ export default function UserDropdownMenu({ onLogout, sidebarOpen }: UserDropdown
     }, 150); // 150ms延迟，避免鼠标快速移动时菜单闪烁
   };
 
-  // 点击外部关闭
+  // 点击外部关闭和modal-open类管理
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -57,10 +57,16 @@ export default function UserDropdownMenu({ onLogout, sidebarOpen }: UserDropdown
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      // 添加modal-open类，禁用背景sticky定位
+      document.body.classList.add('modal-open');
+    } else {
+      // 移除modal-open类
+      document.body.classList.remove('modal-open');
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.body.classList.remove('modal-open');
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }

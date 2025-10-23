@@ -135,23 +135,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return false;
   };
   
-  // 获取当前页面名称
+  // 获取当前页面名称（根据导航栏状态决定是否显示面包屑）
   const getCurrentPageName = () => {
     const currentPath = location.pathname;
     
-    // 首先检查是否有直接匹配的项目
+    // 先检查所有子菜单的精确匹配
     for (const item of navItems) {
-      if (isPathActive(item.path, currentPath)) {
-        return item.name;
-      }
-      
-      // 检查子菜单
       if (item.children) {
         for (const child of item.children) {
           if (isPathActive(child.path, currentPath)) {
-            return child.name;
+            // 如果导航栏隐藏，显示面包屑；如果导航栏展开，只显示子页面名称
+            return sidebarOpen ? child.name : `${item.name} > ${child.name}`;
           }
         }
+      }
+    }
+    
+    // 然后检查父级菜单的直接匹配
+    for (const item of navItems) {
+      if (item.path === currentPath) {
+        return item.name;
       }
     }
     
@@ -347,7 +350,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
         
         {/* 页面内容 */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-3 sm:p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-1 sm:p-2 lg:p-2">
           {children}
         </main>
       </div>

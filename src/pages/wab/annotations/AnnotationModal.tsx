@@ -545,7 +545,7 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
   // 控制body滚动，确保弹窗显示时禁用背景滚动
   useEffect(() => {
     if (isOpen) {
-      // 禁用body滚动
+      // 禁用body滚动并添加标识类
       const originalOverflow = document.body.style.overflow;
       const originalPosition = document.body.style.position;
       
@@ -554,6 +554,7 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
       document.body.style.width = '100%';
       document.body.style.height = '100%';
       document.body.style.top = '0';
+      document.body.classList.add('modal-open');
       
       return () => {
         // 恢复body样式
@@ -562,6 +563,7 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
         document.body.style.width = '';
         document.body.style.height = '';
         document.body.style.top = '';
+        document.body.classList.remove('modal-open');
       };
     }
   }, [isOpen]);
@@ -601,7 +603,7 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
       }}>
         <div className="bg-white rounded-xl max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col">
           {/* 弹窗标题 */}
-          <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 flex items-center justify-between">
+          <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
             <h2 className="text-xl font-semibold text-blue-800">评估标注 - #{evaluationId}</h2>
             
             <div className="flex items-center space-x-6">
@@ -624,7 +626,8 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
               
               <button
                 onClick={onClose}
-                className="text-blue-600 hover:text-blue-800 transition-colors"
+                className="text-blue-600 hover:text-blue-800 transition-colors hover:bg-blue-100 rounded-full p-2"
+                title="关闭"
               >
                 <i className="fa-solid fa-times text-xl"></i>
               </button>
@@ -679,7 +682,6 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
                         </span>
                       </div>
                       <div><span className="text-gray-600">答题用时:</span> <span className="font-medium">{detail.answer_time}秒</span></div>
-                      <div><span className="text-gray-600">回答耗时:</span> <span className="font-medium">{detail.user_answer_time_spent}秒</span></div>
                       <div><span className="text-gray-600">提交时间:</span> <span className="font-medium">
                         {detail.submit_time ? 
                           new Date(detail.submit_time * 1000).toLocaleString('zh-CN') : 
@@ -913,13 +915,13 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
                             
                             <div className="overflow-x-auto">
                               <table className="w-full text-sm">
-                                <thead>
+                                <thead className="sticky top-0 z-10 shadow-sm">
                                   <tr className="border-b-2 border-gray-200 bg-gray-50">
-                                    <th className="text-left p-3 font-semibold text-gray-900 w-32">维度名称</th>
-                                    <th className="text-left p-3 font-semibold text-gray-900 w-20">AI结果</th>
-                                    <th className="text-left p-3 font-semibold text-gray-900">AI分析原因</th>
-                                    <th className="text-center p-3 font-semibold text-gray-900 w-32">结果评价</th>
-                                    <th className="text-center p-3 font-semibold text-gray-900 w-32">原因评价</th>
+                                    <th className="text-left p-3 font-semibold text-gray-900 w-32 bg-gray-50">维度名称</th>
+                                    <th className="text-left p-3 font-semibold text-gray-900 w-20 bg-gray-50">AI结果</th>
+                                    <th className="text-left p-3 font-semibold text-gray-900 bg-gray-50">AI分析原因</th>
+                                    <th className="text-center p-3 font-semibold text-gray-900 w-32 bg-gray-50">结果评价</th>
+                                    <th className="text-center p-3 font-semibold text-gray-900 w-32 bg-gray-50">原因评价</th>
                                   </tr>
                                 </thead>
                                 <tbody>
