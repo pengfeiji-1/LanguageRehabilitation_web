@@ -616,70 +616,175 @@ export default function EvaluationDetailPage() {
       {/* 对话结果弹窗 */}
       {showDialogModal && selectedQuestion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 sticky top-0 bg-white z-20 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-gray-900">对话详情</h3>
-                <button
-                  onClick={() => setShowDialogModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-100 rounded-full p-3"
-                  title="关闭"
-                >
-                  <i className="fa-solid fa-times text-xl"></i>
-                </button>
-              </div>
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* 弹窗头部 */}
+            <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+              <h2 className="text-xl font-semibold text-blue-800">对话详情</h2>
+              <button
+                onClick={() => setShowDialogModal(false)}
+                className="text-blue-600 hover:text-blue-800 transition-colors hover:bg-blue-100 rounded-full p-2"
+                title="关闭"
+              >
+                <i className="fa-solid fa-times text-xl"></i>
+              </button>
             </div>
             
-            <div className="p-6 space-y-4">
-              {/* 题目和参考答案在一行 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-blue-700 font-medium">题目：{selectedQuestion.question_content}</span>
-                    {selectedQuestion.speaking_audio_info && (
-                      <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
-                    )}
+            {/* 内容区域 */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-4">
+                {/* 题目和参考答案在一行 */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-blue-700 font-medium">题目：{selectedQuestion.question_content}</span>
+                      {selectedQuestion.speaking_audio_info && (
+                        <AudioPlayer evaluationId={selectedQuestion.speaking_audio_info.evaluation_id} />
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="text-gray-700 font-medium mb-2">参考答案</div>
+                    <p className="text-gray-800">{selectedQuestion.correct_answer}</p>
                   </div>
                 </div>
-                
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="text-gray-700 font-medium mb-2">参考答案</div>
-                  <p className="text-gray-800">{selectedQuestion.correct_answer}</p>
-                </div>
-              </div>
 
-              {/* 简化的对话显示 */}
-              {selectedQuestion.user_ai_interaction && selectedQuestion.user_ai_interaction.rounds && (
-                <div className="space-y-3">
-                  {selectedQuestion.user_ai_interaction.rounds.map((round, index) => (
-                    <div key={index} className="space-y-3">
-                      {/* AI提问 */}
-                      {round.prompt && (
-                        <div className="bg-blue-500 text-white rounded-lg px-4 py-3 max-w-[80%]">
-                          <p>{round.prompt}</p>
-                        </div>
+                {/* 完整对话展示区域 */}
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-indigo-50 border-b border-indigo-200 px-4 py-3 flex items-center justify-between">
+                    <h3 className="font-semibold flex items-center text-indigo-800">
+                      <i className="fa-solid fa-comments mr-2"></i>
+                      完整对话历史
+                      {selectedQuestion.user_ai_interaction && (
+                        <span className="ml-3 bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-sm">
+                          共 {selectedQuestion.user_ai_interaction.rounds?.length || 0} 轮
+                        </span>
                       )}
-                      
-                      {/* 用户回答 */}
-                      {round.user_answer && (
-                        <div className="flex justify-end">
-                          <div className="bg-green-500 text-white rounded-lg px-4 py-3 max-w-[80%]">
-                            <p>{round.user_answer.text}</p>
+                    </h3>
+                    
+                    <div className="flex items-center space-x-4">
+                      {/* 音频播放按钮 */}
+                      <div className="flex items-center space-x-2">
+                        {selectedQuestion.speaking_audio_info ? (
+                          <span className="text-indigo-600 text-sm">
+                            <i className="fa-solid fa-play mr-1"></i>
+                            播放音频
+                          </span>
+                        ) : (
+                          <span className="text-indigo-500 text-sm">
+                            <i className="fa-solid fa-volume-xmark mr-1"></i>
+                            无音频
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 折叠按钮 */}
+                      <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="text-indigo-600 hover:text-indigo-800 p-1 rounded transition-transform duration-200"
+                        title={isCollapsed ? "展开对话" : "折叠对话"}
+                      >
+                        <i className={`fa-solid ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'} text-sm`}></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {!isCollapsed && (
+                    <div className="p-4 bg-gray-50">
+                      {/* 聊天式对话界面 */}
+                      {selectedQuestion.user_ai_interaction && selectedQuestion.user_ai_interaction.rounds && (
+                        <div className="space-y-4">
+                          {selectedQuestion.user_ai_interaction.rounds.map((round, index) => (
+                            <div key={index} className="space-y-3">
+                              {/* AI提问 - 左侧深色气泡 */}
+                              {round.prompt && (
+                                <div className="flex justify-start items-start space-x-3">
+                                  <div className="flex-shrink-0">
+                                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+                                      <i className="fa-solid fa-robot text-white text-sm"></i>
+                                    </div>
+                                  </div>
+                                  <div className="max-w-xs lg:max-w-md">
+                                    <div className="bg-gray-700 text-white px-4 py-3 rounded-2xl rounded-tl-md">
+                                      <p className="text-sm">{round.prompt}</p>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      {round.timestamp ? new Date(round.timestamp).toLocaleTimeString() : ''}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* 用户回答 - 右侧绿色气泡 */}
+                              {round.user_answer && (
+                                <div className="flex justify-end items-start space-x-3">
+                                  <div className="max-w-xs lg:max-w-md">
+                                    <div className="bg-green-500 text-white px-4 py-3 rounded-2xl rounded-tr-md shadow-sm">
+                                      <p className="text-sm">{round.user_answer.text}</p>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1 text-right">
+                                      {round.timestamp ? new Date(round.timestamp).toLocaleTimeString() : ''}
+                                      {round.user_answer.user_answer_time_spent > 0 && (
+                                        <span className="ml-2">耗时: {round.user_answer.user_answer_time_spent}秒</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex-shrink-0">
+                                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                                      <i className="fa-solid fa-user text-white text-sm"></i>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* AI反馈 - 左侧蓝色气泡 */}
+                              {round.ai_response && (
+                                <div className="flex justify-start items-start space-x-3">
+                                  <div className="flex-shrink-0">
+                                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                      <i className="fa-solid fa-comment-dots text-white text-sm"></i>
+                                    </div>
+                                  </div>
+                                  <div className="max-w-xs lg:max-w-md">
+                                    <div className="bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tl-md">
+                                      <p className="text-sm">{round.ai_response}</p>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      {round.timestamp ? new Date(round.timestamp).toLocaleTimeString() : ''}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          
+                          {/* 对话结束提示 */}
+                          <div className="flex justify-center mt-6">
+                            <div className="bg-white border rounded-full px-4 py-2 shadow-sm">
+                              <div className="text-xs text-gray-600 flex items-center">
+                                <i className="fa-solid fa-flag-checkered text-green-500 mr-2"></i>
+                                对话结束，最终回答: <span className="font-medium text-gray-800 ml-1">{selectedQuestion.user_answer_text}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
-                      
-                      {/* AI反馈 */}
-                      {round.ai_response && (
-                        <div className="bg-gray-500 text-white rounded-lg px-4 py-3 max-w-[80%]">
-                          <p>{round.ai_response}</p>
-                        </div>
-                      )}
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
 
+                  {/* 折叠状态预览 */}
+                  {isCollapsed && (
+                    <div className="p-4 bg-gray-50 border-t">
+                      <div className="flex items-center justify-center text-gray-500 text-sm">
+                        <i className="fa-solid fa-comments mr-2"></i>
+                        对话已折叠（共 {selectedQuestion.user_ai_interaction?.rounds?.length || 0} 轮对话）
+                        <span className="ml-3 text-gray-400">·</span>
+                        <span className="ml-3">最终回答: {selectedQuestion.user_answer_text}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
