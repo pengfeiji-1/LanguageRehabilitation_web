@@ -30,6 +30,14 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [dialogCollapsed, setDialogCollapsed] = useState(false); // 对话框折叠状态
   
+  // 看图说话特殊评分状态
+  const [answerPoints, setAnswerPoints] = useState<Array<{
+    id: string;
+    text: string;
+    autoDetected: boolean;
+    manualSelected: boolean;
+  }>>([]);
+  
   // 标注表单状态
   const [annotation, setAnnotation] = useState<AnnotationData>({
     evaluation_id: evaluationId,
@@ -117,6 +125,13 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
         };
         
         setAnnotation(initialAnnotation);
+        
+        // 如果是看图说话题目，初始化要点数据
+        setTimeout(() => {
+          if (response.data.question_type === 'SPONTANEOUS_SPEECH_PICTURE') {
+            initializePictureDescriptionPoints();
+          }
+        }, 100);
       } else {
         throw new Error('获取标注详情失败');
       }
@@ -444,6 +459,136 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
     }
   };
 
+  // 解析参考答案要点
+  const parseAnswerPoints = (correctAnswer: string): string[] => {
+    if (!correctAnswer) return [];
+    
+    // 处理常见的前缀（如"元素有："、"包含："等）
+    let cleanAnswer = correctAnswer;
+    const prefixPatterns = [/^[^：:]*[：:]\s*/, /^[^有]*有\s*[：:]\s*/];
+    for (const pattern of prefixPatterns) {
+      cleanAnswer = cleanAnswer.replace(pattern, '');
+    }
+    
+    // 支持多种分隔符：顿号、逗号、分号、句号、换行
+    const points = cleanAnswer
+      .split(/[、，,；;。.\n]/)
+      .map(point => point.trim())
+      .filter(point => {
+        // 过滤无效内容
+        return point.length > 0 && 
+               point !== '暂无参考答案' && 
+               point !== '等等' && 
+               point !== '等' &&
+               !point.match(/^[。,，、；;:\s]*$/); // 过滤纯标点
+      });
+    
+    console.log('原始参考答案:', correctAnswer);
+    console.log('清理后答案:', cleanAnswer);
+    console.log('解析出的要点:', points);
+    
+    return points;
+  };
+
+  // 获取所有用户回答文本
+  const getUserAnswerTexts = (): string[] => {
+    if (!detail) return [];
+    
+    const texts: string[] = [];
+    
+    // 添加最终回答
+    if (detail.user_answer_text) {
+      texts.push(detail.user_answer_text);
+    }
+    
+    // 添加对话过程中的所有用户回答
+    if (detail.user_ai_interaction?.rounds) {
+      detail.user_ai_interaction.rounds.forEach(round => {
+        if (round.user_answer?.text) {
+          texts.push(round.user_answer.text);
+        }
+      });
+    }
+    
+    return texts;
+  };
+
+  // 检测要点是否在用户回答中被提及（只要有一个字匹配即可）
+  const detectPointInAnswer = (point: string, answerTexts: string[]): boolean => {
+    if (!point || answerTexts.length === 0) return false;
+    
+    // 去除标点符号，只保留中文和字母数字
+    const cleanPoint = point.replace(/[^\u4e00-\u9fa5\w]/g, '');
+    
+    // 将要点拆分为单个字符
+    const pointChars = cleanPoint.split('');
+    
+    return answerTexts.some(text => {
+      const cleanText = text.replace(/[^\u4e00-\u9fa5\w]/g, '');
+      
+      // 只要要点中的任意一个字符在用户回答中出现就算匹配
+      return pointChars.some(char => cleanText.includes(char));
+    });
+  };
+
+  // 初始化看图说话的要点数据
+  const initializePictureDescriptionPoints = useCallback(() => {
+    if (!detail || detail.question_type !== 'SPONTANEOUS_SPEECH_PICTURE') {
+      return;
+    }
+    
+    const points = parseAnswerPoints(detail.correct_answer);
+    const userTexts = getUserAnswerTexts();
+    
+    const pointsData = points.map((point, index) => {
+      const autoDetected = detectPointInAnswer(point, userTexts);
+      
+      return {
+        id: `point_${index}`,
+        text: point,
+        autoDetected,
+        manualSelected: autoDetected, // 默认选中自动检测到的要点
+      };
+    });
+    
+    setAnswerPoints(pointsData);
+    
+    // 计算初始得分
+    const selectedCount = pointsData.filter(p => p.manualSelected).length;
+    const totalCount = pointsData.length;
+    const score = totalCount > 0 ? selectedCount / totalCount : 0;
+    
+    // 更新正确性得分
+    setAnnotation(prev => ({
+      ...prev,
+      manual_correctness_score: parseFloat(score.toFixed(2))
+    }));
+  }, [detail]);
+
+  // 切换要点选择状态
+  const togglePointSelection = (pointId: string) => {
+    setAnswerPoints(prev => {
+      const newPoints = prev.map(point => 
+        point.id === pointId 
+          ? { ...point, manualSelected: !point.manualSelected }
+          : point
+      );
+      
+      // 重新计算得分
+      const selectedCount = newPoints.filter(p => p.manualSelected).length;
+      const totalCount = newPoints.length;
+      const score = totalCount > 0 ? selectedCount / totalCount : 0;
+      
+      // 更新正确性得分
+      setAnnotation(prev => ({
+        ...prev,
+        manual_correctness_score: parseFloat(score.toFixed(2))
+      }));
+      
+      return newPoints;
+    });
+  };
+
   // 评价按钮组件
   const RatingButtons = ({ 
     value, 
@@ -525,6 +670,14 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
       preloadAudio();
     }
   }, [detail, audioBlobUrl, audioLoading, preloadAudio, evaluationId]);
+
+  // 当detail加载完成后，重新初始化看图说话要点数据
+  useEffect(() => {
+    if (detail && detail.question_type === 'SPONTANEOUS_SPEECH_PICTURE') {
+      console.log('🖼️ 检测到看图说话题目，初始化要点数据');
+      initializePictureDescriptionPoints();
+    }
+  }, [detail, initializePictureDescriptionPoints]);
 
   // 仅在组件卸载时清理音频资源
   useEffect(() => {
@@ -657,7 +810,9 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
                       <div><span className="text-gray-600">题目:</span> <span className="font-medium">{detail.question_id}</span></div>
                       <div><span className="text-gray-600">试卷:</span> <span className="font-medium">{detail.quiz_id}</span></div>
                       <div><span className="text-gray-600">类型:</span> <span className="font-medium">
-                        {detail.question_type === 'SPONTANEOUS_SPEECH_QA' ? '自发性言语' : detail.question_type}
+                        {detail.question_type === 'SPONTANEOUS_SPEECH_QA' ? '自发性言语' : 
+                         detail.question_type === 'SPONTANEOUS_SPEECH_PICTURE' ? '看图说话' : 
+                         detail.question_type}
                       </span></div>
                       <div><span className="text-gray-600">题目内容:</span> <span className="font-medium">{detail.question_content}</span></div>
                       <div><span className="text-gray-600">参考答案:</span> <span className="font-medium">{detail.correct_answer || '暂无参考答案'}</span></div>
@@ -861,18 +1016,83 @@ export default function AnnotationModal({ isOpen, onClose, evaluationId, onAnnot
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           正确性得分 (0-1)
                         </label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={annotation.manual_correctness_score}
-                          onChange={(e) => setAnnotation(prev => ({
-                            ...prev,
-                            manual_correctness_score: parseFloat(e.target.value) || 0
-                          }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
+                        
+                        {/* 看图说话特殊评分界面 */}
+                        {detail.question_type === 'SPONTANEOUS_SPEECH_PICTURE' ? (
+                          <div className="space-y-3">
+                            {/* 得分显示 */}
+                            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border">
+                              <span className="text-sm text-gray-600">计算得分：</span>
+                              <span className="text-lg font-semibold text-blue-600">
+                                {annotation.manual_correctness_score.toFixed(2)}
+                              </span>
+                            </div>
+                            
+                            {/* 要点选择列表 */}
+                            {answerPoints.length > 0 ? (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                                  <span>参考答案要点匹配</span>
+                                  <span>
+                                    {answerPoints.filter(p => p.manualSelected).length} / {answerPoints.length} 项
+                                  </span>
+                                </div>
+                                
+                                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                                  {answerPoints.map((point) => (
+                                    <div
+                                      key={point.id}
+                                      className={`
+                                        relative inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer
+                                        transition-all duration-200 border-2
+                                        ${point.manualSelected 
+                                          ? 'bg-green-500 text-white border-green-500 shadow-md' 
+                                          : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                                        }
+                                      `}
+                                      onClick={() => togglePointSelection(point.id)}
+                                      title={point.autoDetected ? '自动检测到此要点' : '点击选择/取消选择'}
+                                    >
+                                      {/* 要点文本 */}
+                                      <span>{point.text}</span>
+                                      
+                                      {/* 自动检测标识 */}
+                                      {point.autoDetected && (
+                                        <i className={`fa-solid fa-robot text-xs ml-2 ${
+                                          point.manualSelected ? 'text-green-100' : 'text-blue-500'
+                                        }`}></i>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                                
+                                {/* 说明文字 */}
+                                <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                                  <i className="fa-solid fa-info-circle mr-1"></i>
+                                  点击要点可手动选择/取消选择，得分 = 选中要点数 ÷ 总要点数
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="p-3 text-sm text-gray-500 text-center bg-gray-50 rounded">
+                                无参考答案要点可解析
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          /* 普通题目的数字输入框 */
+                          <input
+                            type="number"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={annotation.manual_correctness_score}
+                            onChange={(e) => setAnnotation(prev => ({
+                              ...prev,
+                              manual_correctness_score: parseFloat(e.target.value) || 0
+                            }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        )}
                       </div>
                       
                       <div>
